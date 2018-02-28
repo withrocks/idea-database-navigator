@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<token-def>
+    <tokens>
+        <token id="WHITE_SPACE" type="whitespace"/>
+
+        <!-- CHARACTERS -->
+        <token index="0" id="CHR_AT" value="@" type="character"/>
+        <token index="1" id="CHR_COLON" value=":" type="character"/>
+        <token index="2" id="CHR_COMMA" value="," type="character" formatting-spacing-before="NO_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="3" id="CHR_DOT" value="." type="character" formatting-spacing-before="NO_SPACE" formatting-spacing-after="NO_SPACE"/>
+        <token index="4" id="CHR_EQUAL" value="=" type="character" formatting-spacing-before="ONE_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="5" id="CHR_EXCLAMATION" value="!" type="character" formatting-spacing-before="ONE_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="6" id="CHR_GREATER" value=" " type="character"/>
+        <token index="7" id="CHR_HASH" value="#" type="character"/>
+        <token index="8" id="CHR_LEFT_BRACKET" value="[" type="character" formatting-spacing-after="NO_SPACE"/>
+        <token index="9" id="CHR_LEFT_CURLY_BRACKET" value="{" type="character" formatting-spacing-after="NO_SPACE"/>
+        <token index="10" id="CHR_LEFT_PARENTHESIS" value="(" type="character"  formatting-spacing-after="NO_SPACE"/>
+        <token index="11" id="CHR_LESS" value=" " type="character"/>
+        <token index="12" id="CHR_MINUS" value="-" type="character"/>
+        <token index="13" id="CHR_PERCENT" value="%" type="character"/>
+        <token index="14" id="CHR_PLUS" value="+" type="character"/>
+        <token index="15" id="CHR_RIGHT_BRACKET" value="]" type="character" formatting-spacing-before="NO_SPACE"/>
+        <token index="16" id="CHR_RIGHT_CURLY_BRACKET" value="}" type="character" formatting-spacing-before="NO_SPACE"/>
+        <token index="17" id="CHR_RIGHT_PARENTHESIS" value=")" type="character" formatting-spacing-before="NO_SPACE"/>
+        <token index="18" id="CHR_SEMICOLON" value=";" type="character" formatting-spacing-before="NO_SPACE"/>
+        <token index="19" id="CHR_SLASH" value="/" type="character" formatting-wrap="ALWAYS" formatting-indend="ABSOLUTE_NONE"/>
+        <token index="20" id="CHR_STAR" value="*" type="character"/>
+        <token index="21" id="CHR_VERTICAL_BAR" value="|" type="character"/>
+        <token index="22" id="CHR_AND" value="&amp;" type="character"/>
+
+
+        <token index="0" id="OPR_CONCATENATION" value="||" type="operator" formatting-spacing-before="ONE_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="1" id="OPR_ASSIGNMENT" value=":=" type="operator" formatting-spacing-before="ONE_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="2" id="OPR_RANGE_DOTS" value=".." type="operator" formatting-spacing-before="ONE_SPACE" formatting-spacing-after="ONE_SPACE"/>
+        <token index="3" id="OPR_CAST_PREFIX" value="::" type="operator" formatting-spacing-before="NO_SPACE" formatting-spacing-after="NO_SPACE"/>
+
+
+        <token id="LINE_COMMENT" type="comment"/>
+        <token id="BLOCK_COMMENT" type="comment"/>
+
+        <token id="IDENTIFIER" type="identifier"/>
+        <token id="QUOTED_IDENTIFIER" type="identifier"/>
+
+        <token id="INTEGER" type="numeric"/>
+        <token id="NUMBER" type="numeric"/>
+        <token id="STRING" type="literal"/>
+        <token id="OPERATOR"/>
+        <token id="VARIABLE"/>
+    </tokens>
+
+    <token-sets>
+        <token-set id="WHITE_SPACES">WHITE_SPACE</token-set>
+        <token-set id="PARENTHESES">CHR_LEFT_PARENTHESIS, CHR_RIGHT_PARENTHESIS</token-set>
+        <token-set id="BRACKETS">CHR_LEFT_BRACKET, CHR_RIGHT_BRACKET</token-set>
+        <token-set id="COMMENTS">LINE_COMMENT, BLOCK_COMMENT</token-set>
+        <token-set id="IDENTIFIERS">IDENTIFIER, QUOTED_IDENTIFIER</token-set>
+        <token-set id="NUMBERS">INTEGER, NUMBER</token-set>
+        <token-set id="OPERATORS">OPR_CONCATENATION, OPR_ASSIGNMENT, OPR_RANGE_DOTS, OPR_CAST_PREFIX</token-set>
+        <token-set id="STRINGS">STRING</token-set>
+        <token-set id="VARIABLES">VARIABLE</token-set>
+    </token-sets>
+</token-def>

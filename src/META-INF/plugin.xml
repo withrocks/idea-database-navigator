@@ -1,0 +1,546 @@
+<idea-plugin version="2" url="http://www.jetbrains.net/confluence/display/CONTEST/Database+Navigator">
+    <name>Database Navigator</name>
+    <id>DBN</id>
+    <!--3050 -->
+    <version>3.0.4183</version>
+    <category>Database</category>
+    <depends>com.intellij.modules.lang</depends>
+    <vendor email="dancioca@bluewin.ch" logo="/img/project/DatabaseNavigator.png">Dan Cioca</vendor>
+    <idea-version since-build="140.0001" until-build="141.9999"/>
+    <description><![CDATA[
+            <b>Database development, scripting and navigation tool</b><br>
+            This product adds extensive database development and maintenance capabilities to the IntelliJ IDEA development environment and related products.
+            Along with a qualified and IDE-compliant SQL and PL/SQL editor, it provides advanced database connection management,
+            script execution support, database objects browsing, data and code editor, support for database compiler operations, method execution and debugging,
+            database objects factory, as well as various navigation capabilities between all its components.<br>
+            See features overview on the <a href="http://www.jetbrains.net/confluence/display/CONTEST/Database+Navigator" target="new">support page</a>.<br><br>
+
+            <b>Supported Databases:</b>
+            <ul>
+                <li>Oracle
+                <li>MySQL
+                <li>PostgreSQL (early preview)
+            </ul><br>
+            <br><br>
+            This tool is free for personal and commercial usage. <br>
+            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3QAPZFCCARA4J">Donations</a> are very welcome though.<br>
+    ]]></description>
+    <change-notes><![CDATA[
+        <ul>
+            <li><b>3.0.4183</b>
+            <ul>
+                - Object dependency tree (work in progress)<br>
+                - Zoom in/out support for data grids (Ctrl-MouseWheel)<br>
+                - Remember statement execution variables<br>
+                - Remember method execution parameter history<br>
+                - Session Browser colors configuration</br>
+                - Error reporting improvements (attachments)<br>
+                - Settings editor cosmetic updates<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.4012</b>
+            <ul>
+                - Support for GRANT SQL-statement (Oracle)</br>
+                - Database Sessions Browser (all databases)</br>
+                - Session disconnect / kill actions</br>
+                - Transaction Management options</br>
+                - Restore database editors state (folding, selection, cursor position)</br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.3821</b>
+            <ul>
+                - Support for IntelliJ IDEA latest EAP version (14.1)</br>
+                - Code completion enhancements (ignore case lookup / enforce code style case option)<br>
+                - Method execution/debug intention actions (Alt-Enter)<br>
+                - Oracle PLSQL Debugger enhancements (support for record variables) <br>
+                - Column parameter info (Ctrl-P) for insert statements<br>
+                - Plugin update notification in configuration dialog<br>
+                - Discontinued support for IntelliJ IDEA 12.x and related products<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.3674</b>
+            <ul>
+                - Support for Oracle XMLTYPE editing / method execution<br>
+                - Support for BLOB/CLOB method execution arguments<br>
+                - Method call parameter info (Ctrl-P)<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.3601</b>
+            <ul>
+                - Object sorting options in database browser<br>
+                - Icon rework for better visibility in dark schemes<br>
+                - Support method executions with collection return types (Oracle) <br>
+                - Excel 2007 (xlsx) data export format<br>
+                - Oracle Type language support<br>
+                - Execution logging - Oracle DBMS_OUTPUT<br>
+                - Improved code completion support for local objects<br>
+                - Minor bug fixes and improvements<br>
+            </ul>
+            <li><b>3.0.3501</b>
+             <ul>
+                - Parser improvements and optimizations<br>
+                - Explain plan execution support (Oracle)<br>
+                - Support for database triggers<br>
+                - Language support for XML functions (Oracle)<br>
+                - Code completion support for locally defined objects<br>
+                - Various bug fixes<br>
+            </ul>
+            <li><b>3.0.3401</b>
+             <ul>
+                - Support for latest IntelliJ EAP version<br>
+                - Support for default project configuration (including connections)<br>
+                - Discontinued connection setup on module level<br>
+                - Compile error outputs on DDL script execution (Oracle)<br>
+                - Support for manually controlled database connectivity<br>
+                - Improved statement execution result linkage<br>
+                - Improved focus logic on statement execution<br>
+                - Various bug fixes and optimizations<br>
+            </ul>
+            <li><b>3.0.3305</b>
+             <ul>
+                - Support connecting on demand only (i.e. disable auto-connect)<br>
+                - Support for multiple SQL consoles per connection<br>
+                - "Save Console To File" functionality<br>
+                - Statement execution shortcut improvements<br>
+                - Support for Oracle trigger syntax<br>
+                - Support for Oracle explain plan syntax<br>
+                - Bug fixes<br>
+            </ul>
+            <li><b>3.0.3272</b>
+             <ul>
+                - Support for anonymous "begin / end" blocks (Oracle)<br>
+                - Support for alternative delimiter configuration (MySQL)<br>
+                - "Hide empty schemas" feature for object browser<br>
+                - MySQL DDL file support<br>
+                - DDL file formatting and configuration enhancements<br>
+                - Structure view enhancements<br>
+                - Language parsers support for database versions (postgres)<br>
+                - Bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.3192</b>
+             <ul>
+                - Configurable "tracking" columns (display text attributes, visibility, editable)<br>
+                - Datagrid sorting settings (nulls first/last, max number of sorting columns)<br>
+                - Postgres table editor (support for Array editing)<br>
+                - Postgres SQL language (additional statements support)<br>
+                - Oracle SQL (support PIVOT clause)<br>
+                - Discontinued support for IntelliJ IDEA 11.x and related products<br>
+                - Bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.3145</b>
+             <ul>
+                - PostgreSQL support (work in progress)<br>
+                - Multiple column sorting in dataset editor and query results (Ctrl-Click)<br>
+                - Dataset Editor - hide / move columns (persistent state)<br>
+                - Improved object lookup functionality (Ctrl-Shift-D)<br>
+                - Copy / Paste feature for connection settings<br>
+                - Metadata layer performance improvements (use prepared statements)<br>
+                - Support for latest IntelliJ IDEA EAP versions<br>
+                - Discontinued support for IntelliJ IDEA 10.x and related products<br>
+                - Bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.2686</b>
+             <ul>
+                - Support for latest IntelliJ version<br>
+                - Live Templates Ctrl-J (work in progress)<br>
+                - "About" page (with "donate" link) <br>
+                - Multiple column sorting (work in progress - not released)<br>
+                - Method execution result improvements (tree view)<br>
+                - Reworked action system to allow multiple editor instances, split and detached editors<br>
+                - Bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.2530</b>
+             <ul>
+                - Support for error reporting directly from IDE<br>
+                - Connection timeout and idle time management<br>
+                - Memory management improvements (fixed memory leaks on project close)<br>
+                - Improved performance for database object lookup (Ctrl+Shift+D)<br>
+                - Compatibility with latest IDE version (including EAP)<br>
+                - New Icon set (work in progress)<br>
+                - Support for dark scheme<br>
+                - Minor bug fixes and performance improvements<br>
+                - Discontinued support for IntelliJ IDEA 9.x and related products<br>
+            </ul>
+            <li><b>3.0.2349</b>
+            <ul>
+                - Code formatting (Experimental - work in progress)<br>
+                - Customizable data-grid colors and fonts<br>
+                - Uncommitted changes overview / prompt dialogs<br>
+                - Balloon notifications and activiy log entries for several operations<br>
+                - Connection Auto-Commit support<br>
+                - Support for IntelliJ 12 EAP release<br>
+                - Fixed broken user interface with PyCharm and RubyMine<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.2191</b>
+            <ul>
+                - Support for IntelliJ 11 release<br>
+                - Configurable datbase environments / environment colors<br>
+                - Data grid preview popup for BLOB/CLOBs <br>
+                - Data search functionality in dataset editors and query results (experimental)<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.2017</b>
+            <ul>
+                - Support for latest IntelliJ EAP versions<br>
+                - Statement generation engine (extract select, insert, ddl statements)<br>
+                - Fixes of BLOB editing support<br>
+                - Support for database content encoding<br>
+                - Data Editor - navigate to referenced record<br>
+                - Navigation bar improvement for DB objects<br>
+                - XML Data Export format<br>
+                - Custom number and date/time formats in locale settings<br>
+                - Connection setup enhancements (NOTE: you may lose connection custom properties)<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.1911</b>
+            <ul>
+                - Fixed compatibility issues with Ruby plugin<br>
+                - Support for IDEA 10.5 release<br>
+                - General bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.1898</b>
+            <ul>
+                - <b>recommended upgrade if you are using 3.0.1895</b><br>
+                - Support for IDEA X EAP releases<br>
+                - Configuration framework changes (NOTE: some of your settings may be reset to default)<br>
+                - Object name filters (e.g. Schema filters) on connection level<br>
+                - Object type filters on connection level<br>
+                - Ability to activate/deactivate connections<br>
+                - Oracle OS authentication<br>
+                - Fixed memory leak issues with large result-sets<br>
+                - General bug fixes and performance improvements<br>
+            </ul>
+            <li><b>3.0.1870</b>
+            <ul>
+                - Quick SQL sandbox (SQL Console for database connections)<br>
+                - Show object detailed information (configurable)<br>
+                - Added support for SQL ISO-92 (work in progress - not usable yet)<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.1856</b>
+            <ul>
+                - Added support for IntelliJ IDEA X (BETA)<br>
+                - Discontinued support for IDEA 8.x<br>
+                - Improved navigation within PL/SQL code<br>
+                - Added code completion for variables and method parameters in PL/SQL code<br>
+                - Enhanced database object compiler handling (keep current debug status)<br>
+                - Improved object lookup functionality (select connection prompt)<br>
+                - Added navigation-bar support for database objects (experimental)<br>
+                - Fixed xls data export for select statement results<br>
+                - Enhanced xls export data format (make use of regional settings)<br>
+                - Added HTML data export processor<br>
+                - Persisted data export options<br>
+                - Object properties (work in progress)<br>
+                - Minor bug fixes<br>
+            </ul>
+            <li><b>3.0.1804</b>
+            <ul>
+                - Database object lookup (Ctrl-Shift-D) - Experimental phase<br>
+                - Improved Debugger breakpoint handling<br>
+                - Compatibility version constraint (no support for IDEA X yet)<br>
+                - Minor bug fixes<br>
+            </ul>
+        </ul>
+        <a href="http://confluence.jetbrains.net/display/CONTEST/DBN+-+Change+Notes">See full release notes</a>
+     ]]></change-notes>
+
+    <application-components>
+        <component><implementation-class>com.dci.intellij.dbn.DatabaseNavigator</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.vfs.DatabaseFileSystem</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.driver.DatabaseDriverManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.code.SourceCodeEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.code.SourceCodeBodyEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.ddl.DDLFileEditorProvider0</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.ddl.DDLFileEditorProvider1</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.ddl.DDLFileEditorProvider2</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.data.DatasetEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.session.SessionBrowserEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.code.SourceCodeSpecEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.console.SQLConsoleEditorProvider</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.common.event.EventManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.connection.ConnectionCache</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.options.DefaultProjectSettingsManager</implementation-class></component>
+    </application-components>
+    <project-components>
+        <!--<component><implementation-class>com.dci.intellij.dbn.options.GlobalProjectSettings</implementation-class></component>-->
+        <component><implementation-class>com.dci.intellij.dbn.browser.DatabaseBrowserManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.common.environment.EnvironmentManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.connection.ConnectionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.connection.mapping.FileConnectionMappingManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.connection.transaction.DatabaseTransactionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.connection.console.DatabaseConsoleManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.ExecutionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.statement.StatementExecutionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.script.ScriptExecutionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.compiler.DatabaseCompilerManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.method.MethodExecutionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.explain.ExplainPlanManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.execution.logging.DatabaseLoggingManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.code.common.completion.CodeCompletionManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.code.common.style.DBLCodeStyleManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.data.export.DataExportManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.debugger.DatabaseDebuggerManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.ddl.DDLFileManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.ddl.DDLFileAttachmentManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.code.SourceCodeManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.data.DatasetEditorManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.data.filter.DatasetFilterManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.data.state.DatasetEditorStateManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.editor.session.SessionBrowserManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.generator.StatementGenerationManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.object.common.loader.DatabaseLoaderManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.object.factory.DatabaseObjectFactory</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.object.filter.name.ObjectNameFilterManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.object.dependency.ObjectDependencyManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.options.ProjectSettingsManager</implementation-class></component>
+        <component><implementation-class>com.dci.intellij.dbn.vfs.DatabaseFileManager</implementation-class></component>
+    </project-components>
+    <module-components>
+        <!--<component><implementation-class>com.dci.intellij.dbn.browser.cache.ModuleBrowserCacheComponent</implementation-class></component>-->
+    </module-components>
+
+    <actions>
+        <group id="DBNavigator.ActionGroup.FileEditor" text="File Editor Controls">
+            <action id="DBNavigator.Actions.DatabaseLogging" class="com.dci.intellij.dbn.execution.logging.action.DatabaseLoggingToggleAction" text="Script Editor - Enable / Disable Database Logging" icon="/img/LogOutputConsole.png"/>
+            <action id="DBNavigator.Actions.Connections" class="com.dci.intellij.dbn.language.editor.action.SelectConnectionComboBoxAction" text="Script Editor - DB Connections"/>
+            <action id="DBNavigator.Actions.CurrentSchema" class="com.dci.intellij.dbn.language.editor.action.SetCurrentSchemaComboBoxAction" text="Script Editor - Current schema"/>
+            <action id="DBNavigator.Actions.Execute" class="com.dci.intellij.dbn.execution.statement.action.ExecuteStatementAction" text="Script Editor - Execute statement"/>
+            <action id="DBNavigator.Actions.ExplainPlan" class="com.dci.intellij.dbn.execution.explain.action.ExplainPlanAction" text="Script Editor - Explain plan" icon="/img/action/ExplainStatement.png"/>
+            <action id="DBNavigator.Actions.Commit" class="com.dci.intellij.dbn.language.editor.action.TransactionCommitEditorAction" text="Script Editor - Commit transaction"/>
+            <action id="DBNavigator.Actions.Rollback" class="com.dci.intellij.dbn.language.editor.action.TransactionRollbackEditorAction" text="Script Editor - Rollback transaction"/>
+            <separator/>
+            <action id="DBNavigator.Actions.SaveToFile" class="com.dci.intellij.dbn.language.editor.action.SaveToFileEditorAction" text="Console - Save to file" icon="/img/action/SaveToFile.png"/>
+            <action id="DBNavigator.Actions.ConsoleOptions" class="com.dci.intellij.dbn.language.editor.action.ConsoleOptionsAction" text="Script Editor - Local Settings"/>
+            <!--
+                        <action id="DBNavigator.Actions.DeleteConsole" class="com.dci.intellij.dbn.language.editor.action.DeleteConsoleEditorAction" text="Console - Delete" icon="/img/action/Delete.png"/>
+            -->
+            <separator/>
+            <action id="DBNavigator.Actions.OpenSettings" class="com.dci.intellij.dbn.language.editor.action.OpenSettingsAction" text="Script Editor - Settings"/>
+        </group>
+        <group id="DBNavigator.Actions.MainMenu" text="_DB Navigator">
+            <action class="com.dci.intellij.dbn.menu.action.OpenSQLConsoleAction" text="Open SQL Console..." id="DBNavigator.Actions.MainMenu.OpenSQLConsole" icon="/img/file/SQLConsole.png"/>
+            <action class="com.dci.intellij.dbn.menu.action.OpenSessionBrowserAction" text="Open Session Browser..." id="DBNavigator.Actions.MainMenu.OpenSessionBrowser" icon="/img/file/SessionBrowser.png"/>
+            <action class="com.dci.intellij.dbn.menu.action.OpenMethodExecutionHistoryAction" text="Method Execution History" id="DBNavigator.Actions.MainMenu.OpenMethodExecutionHistory" icon="/img/MethodExecutionHistory.png"/>
+            <action class="com.dci.intellij.dbn.menu.action.OpenUncommittedChangesOverviewAction" text="Uncommitted Changes" id="DBNavigator.Actions.MainMenu.OpenUncommittedChangesOverview"/>
+            <separator/>
+            <group id="DBNavigator.ActionGroup.Development" text="Development" popup="true">
+                <action id="DBNavigator.Actions.MainMenu.DevelopmentReset" class="com.dci.intellij.dbn.menu.action.MetaDataDefinitionReloadAction" text="Reload Metadata Definitions"/>
+                <action id="DBNavigator.Actions.MainMenu.DevelopmentSlowDatabase" class="com.dci.intellij.dbn.menu.action.SimulateSlowDatabaseAction" text="Simulate Slow Database Connection"/>
+            </group>
+            <group id="DBNavigator.ActionGroup.ImportExportSettings" text="Default Settings" popup="true">
+                <action id="DBNavigator.Actions.MainMenu.OpenDefaultSettings" class="com.dci.intellij.dbn.menu.action.OpenDefaultSettingsAction" text="Open Default Settings..."/>
+                <action id="DBNavigator.Actions.MainMenu.LoadDefaultSettings" class="com.dci.intellij.dbn.menu.action.ImportDefaultSettingsAction" text="Import Settings..."/>
+                <action id="DBNavigator.Actions.MainMenu.SaveDefaultSettings" class="com.dci.intellij.dbn.menu.action.ExportAsDefaultSettingsAction" text="Export Settings..."/>
+            </group>
+            <action id="DBNavigator.Actions.MainMenu.OpenSettings" class="com.dci.intellij.dbn.menu.action.OpenSettingsAction" text="Settings"/>
+            <action id="DBNavigator.Actions.MainMenu.OpenAbout" class="com.dci.intellij.dbn.menu.action.OpenAboutPageAction" text="About"/>
+            <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.SourceEditor" text="Source Editor Controls">
+            <action id="DBNavigator.Actions.SourceEditor.Save" class="com.dci.intellij.dbn.editor.code.action.SaveChangesAction" text="Source Editor - Save">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl S"/>
+            </action>
+            <action id="DBNavigator.Actions.CodeEditor.Rollback" class="com.dci.intellij.dbn.editor.code.action.RevertChangesAction" text="Code Editor - Revert Changes"/>
+            <action id="DBNavigator.Actions.CodeEditor.Reload" class="com.dci.intellij.dbn.editor.code.action.ReloadSourceCodeAction" text="Code Editor - Reload"/>
+            <action id="DBNavigator.Actions.CodeEditor.Compile" class="com.dci.intellij.dbn.editor.code.action.CompileObjectAction" text="Code Editor - Compile"/>
+            <separator/>
+            <action id="DBNavigator.Actions.CodeEditor.CompareWithOriginal" class="com.dci.intellij.dbn.editor.code.action.CompareWithOriginalAction" text="Code Editor - Compare with Original"/>
+            <action id="DBNavigator.Actions.CodeEditor.CompareWithDatabase" class="com.dci.intellij.dbn.editor.code.action.CompareWithDatabaseAction" text="Code Editor - Compare with Database"/>
+            <separator/>
+            <action id="DBNavigator.Actions.CodeEditor.RunMethod" class="com.dci.intellij.dbn.editor.code.action.RunMethodAction" text="Code Editor - Run Method" icon="/img/action/ExecuteMethod.png"/>
+            <action id="DBNavigator.Actions.CodeEditor.DebugMethod" class="com.dci.intellij.dbn.editor.code.action.DebugMethodAction" text="Code Editor - Debug Method" icon="/img/action/DebugMethod.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.CodeEditor.LinkDdlFile" class="com.dci.intellij.dbn.editor.code.action.DDLFileAction" text="Code Editor - DDL Files"/>
+            <separator/>
+            <action id="DBNavigator.Actions.CodeEditor.OpenSettings" class="com.dci.intellij.dbn.editor.code.action.OpenSettingsAction" text="Code Editor - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.SessionBrowser" text="Session Browser Controls">
+            <action id="DBNavigator.Actions.SessionBrowser.Reload" class="com.dci.intellij.dbn.editor.session.action.ReloadSessionsAction" text="Session Browser - Reload"/>
+            <action id="DBNavigator.Actions.SessionBrowser.TimedReload" class="com.dci.intellij.dbn.editor.session.action.TimedReloadComboBoxAction" text="Session Browser - Automatic Reload"/>
+            <separator/>
+            <action id="DBNavigator.Actions.SessionBrowser.FilterUsers" class="com.dci.intellij.dbn.editor.session.action.FilterUsersComboBoxAction" text="Session Browser - Filter Users"/>
+            <action id="DBNavigator.Actions.SessionBrowser.FilterHosts" class="com.dci.intellij.dbn.editor.session.action.FilterHostsComboBoxAction" text="Session Browser - Filter Hosts"/>
+            <action id="DBNavigator.Actions.SessionBrowser.FilterStatuses" class="com.dci.intellij.dbn.editor.session.action.FilterStatusesComboBoxAction" text="Session Browser - Filter Statuses"/>
+            <action id="DBNavigator.Actions.SessionBrowser.ClearFilters" class="com.dci.intellij.dbn.editor.session.action.ClearFiltersAction" text="Session Browser - Clear Filters"/>
+            <separator/>
+            <action id="DBNavigator.Actions.SessionBrowser.DisconnectSessions" class="com.dci.intellij.dbn.editor.session.action.DisconnectSessionsAction" text="Session Browser - Disconnect Sessions"/>
+            <action id="DBNavigator.Actions.SessionBrowser.KillSessions" class="com.dci.intellij.dbn.editor.session.action.KillSessionsAction" text="Session Browser - Kill Sessions"/>
+            <separator/>
+            <action id="DBNavigator.Actions.SessionBrowser.OpenSettings" class="com.dci.intellij.dbn.editor.session.action.OpenSettingsAction" text="Session Browser - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.DataEditor" text="Data Editor Controls">
+            <action id="DBNavigator.Actions.DataEditor.SwitchEditableStatus" class="com.dci.intellij.dbn.editor.data.action.LockUnlockDataEditing" text="Data Editor - Lock / Unlock Editing"/>
+            <separator/>
+            <action id="DBNavigator.Actions.DataEditor.FindData" class="com.dci.intellij.dbn.editor.data.action.DataFindAction" text="Data Editor - Find...">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl F"/>
+            </action>
+            <action id="DBNavigator.Actions.DataEditor.EditRecord" class="com.dci.intellij.dbn.editor.data.action.EditRecordAction" text="Data Editor - Edit Record"/>
+            <action id="DBNavigator.Actions.DataEditor.FetchNextRecords" class="com.dci.intellij.dbn.editor.data.action.FetchNextRecordsAction" text="Data Editor - Fetch Next Records"/>
+            <action id="DBNavigator.Actions.DataEditor.Reload" class="com.dci.intellij.dbn.editor.data.action.ReloadDataAction" text="Data Editor - Reload"/>
+            <action id="DBNavigator.Actions.DataEditor.SelectDatasetFilter" class="com.dci.intellij.dbn.editor.data.action.SelectDatasetFilterComboBoxAction" text="Data Editor - Select Filter"/>
+            <action id="DBNavigator.Actions.DataEditor.CreateEditFilter" class="com.dci.intellij.dbn.editor.data.action.CreateEditDatasetFilterAction" text="Data Editor - Create / Edit Filter"/>
+            <action id="DBNavigator.Actions.DataEditor.Options" class="com.dci.intellij.dbn.editor.data.action.DatasetEditorOptionsAction" text="Data Editor - Options"/>
+<!--
+            <separator/>
+            <action id="DBNavigator.Actions.DataEditor.OpenColumnVisibilityDialog" class="com.dci.intellij.dbn.editor.data.action.OpenColumnSetupDialogAction" text="Data Editor - Column Setup..."/>
+            <action id="DBNavigator.Actions.DataEditor.OpenSortingDialog" class="com.dci.intellij.dbn.editor.data.action.OpenSortingDialogAction" text="Data Editor - Sorting..."/>
+-->
+            <separator/>
+            <action id="DBNavigator.Actions.DataEditor.DuplicateRecord" class="com.dci.intellij.dbn.editor.data.action.DuplicateRecordAction" text="Data Editor - Duplicate Record">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl D"/>
+            </action>
+            <action id="DBNavigator.Actions.DataEditor.InsertRecord" class="com.dci.intellij.dbn.editor.data.action.InsertRecordAction" text="Data Editor - Insert Record">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift INSERT"/>
+            </action>
+            <action id="DBNavigator.Actions.DataEditor.DeleteRecord" class="com.dci.intellij.dbn.editor.data.action.DeleteRecordAction" text="Data Editor - Delete Record">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift DELETE"/>
+            </action>
+            <separator/>
+            <reference id="DBNavigator.Actions.Commit"/>
+            <reference id="DBNavigator.Actions.Rollback"/>
+            <separator/>
+            <action id="DBNavigator.Actions.DataEditor.Export" class="com.dci.intellij.dbn.editor.data.action.ExportDataAction" text="Data Editor - Export"/>
+            <action id="DBNavigator.Actions.DataEditor.Import" class="com.dci.intellij.dbn.editor.data.action.ImportDataAction" text="Data Editor - Import"/>
+            <separator/>
+            <action id="DBNavigator.Actions.DataEditor.OpenSettings" class="com.dci.intellij.dbn.editor.data.action.OpenSettingsAction" text="Data Editor - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.StatementExecutionResult">
+            <action id="DBNavigator.Actions.ExecutionResult.Close" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultCloseAction" text="Execution Result - Close" icon="/img/action/Close.png"/>
+            <action id="DBNavigator.Actions.ExecutionResult.ViewStatement" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultViewStatementAction" text="Execution Result - View statement" icon="/img/action/Preview.png"/>
+            <action id="DBNavigator.Actions.ExecutionResult.ViewRecord" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultViewRecordAction" text="Execution Result - View record" icon="/img/RecordViewer.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.ExecutionResult.OpenVariablesDialog" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultVariablesDialogAction" text="Execution Result - Open variables dialog"/>
+            <action id="DBNavigator.Actions.ExecutionResult.RerunStatement" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultRerunAction" text="Execution Result - Rerun statement"/>
+            <action id="DBNavigator.Actions.ExecutionResult.FetchNextRecords" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultResumeAction" text="Execution Result - Fetch next records"/>
+            <separator/>
+            <action id="DBNavigator.Actions.ExecutionResult.FindData" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultFindDataAction" text="Execution Result - Find data" icon="/img/action/Find.png">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl F"/>
+            </action>
+            <action id="DBNavigator.Actions.ExecutionResult.ExportData" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultExportAction" text="Execution Result - Export data" icon="/img/action/DataExport.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.ExecutionResult.Settings" class="com.dci.intellij.dbn.execution.statement.result.action.ExecutionResultSettingsAction" text="Execution Result - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.ExplainPlanResult">
+            <action id="DBNavigator.Actions.ExplainPlanResult.Close" class="com.dci.intellij.dbn.execution.explain.result.action.ExplainPlanResultCloseAction" text="Explain Plan Result - Close" icon="/img/action/Close.png"/>
+            <action id="DBNavigator.Actions.ExplainPlanResult.ViewStatement" class="com.dci.intellij.dbn.execution.explain.result.action.ExplainPlanResultViewStatementAction" text="Explain Plan Result - View statement" icon="/img/action/Preview.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.ExplainPlanResult.ExpandAll" class="com.dci.intellij.dbn.execution.explain.result.action.ExplainPlanResultExpandAllAction" text="Explain Plan Result - Expand All" icon="/img/action/ExpandAll.png"/>
+            <action id="DBNavigator.Actions.ExplainPlanResult.CollapseAll" class="com.dci.intellij.dbn.execution.explain.result.action.ExplainPlanResultCollapseAllAction" text="Explain Plan Result - Collapse All" icon="/img/action/CollapseAll.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.ExplainPlanResult.Settings" class="com.dci.intellij.dbn.execution.explain.result.action.ExplainPlanResultSettingsAction" text="Explain Plan - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.DatabaseLogOutput">
+            <action id="DBNavigator.Actions.DatabaseLogOutput.Close" class="com.dci.intellij.dbn.execution.logging.action.DatabaseLogOutputCloseAction" text="Database Log Output - Close" icon="/img/action/Close.png"/>
+            <action id="DBNavigator.Actions.DatabaseLogOutput.Settings" class="com.dci.intellij.dbn.execution.logging.action.DatabaseLogOutputSettingsAction" text="Database Log Output - Settings"/>
+        </group>
+        <group id="DBNavigator.ActionGroup.Browser.ObjectProperties" text="Browser object properties">
+            <action id="DBNavigator.Actions.Browser.HideObjectProperties" class="com.dci.intellij.dbn.browser.action.HideObjectPropertiesAction" text="Hide properties"/>
+        </group>
+
+        <action id="DBNavigator.Actions.Navigation.GotoDatabaseObject" class="com.dci.intellij.dbn.navigation.action.GoToDatabaseObjectAction" text="Database Object...">
+            <add-to-group group-id="GoToMenu" anchor="before" relative-to-action="GotoLine"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
+        </action>
+
+        <group id="DBNavigator.ActionGroup.Browser.Controls" text="Browser object properties">
+            <action id="DBNavigator.Actions.Browser.NavigateBack" class="com.dci.intellij.dbn.browser.action.NavigateBackAction" text="Browser - Back"/>
+            <action id="DBNavigator.Actions.Browser.NavigateForward" class="com.dci.intellij.dbn.browser.action.NavigateForwardAction" text="Browser - Forward"/>
+            <action id="DBNavigator.Actions.Browser.AutoscrollToEditor" class="com.dci.intellij.dbn.browser.action.AutoscrollToEditorAction" text="Browser - Autoscroll to editor"/>
+            <action id="DBNavigator.Actions.Browser.AutoscrollFromEditor" class="com.dci.intellij.dbn.browser.action.AutoscrollFromEditorAction" text="Browser - Autoscroll from editor"/>
+            <action id="DBNavigator.Actions.Browser.ExpandTree" class="com.dci.intellij.dbn.browser.action.ExpandTreeAction" text="Browser - Expand all"/>
+            <action id="DBNavigator.Actions.Browser.CollapseTree" class="com.dci.intellij.dbn.browser.action.CollapseTreeAction" text="Browser - Collapse all"/>
+            <action id="DBNavigator.Actions.Browser.ShowObjectProperties" class="com.dci.intellij.dbn.browser.action.ShowObjectPropertiesAction" text="Browser - Show object properties"/>
+            <separator/>
+            <action id="DBNavigator.Actions.Browser.OpenSQLConsole" class="com.dci.intellij.dbn.browser.action.OpenSQLConsoleAction" text="Browser - SQL Console" icon="/img/file/SQLConsole.png"/>
+            <action id="DBNavigator.Actions.Browser.OpenSessionBrowser" class="com.dci.intellij.dbn.browser.action.OpenSessionBrowserAction" text="Browser - Session Browser" icon="/img/file/SessionBrowser.png"/>
+            <separator/>
+            <action id="DBNavigator.Actions.Browser.OpenSettings" class="com.dci.intellij.dbn.browser.action.OpenSettingsAction" text="Browser - Settings"/>
+        </group>
+    </actions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable instance="com.dci.intellij.dbn.options.ProjectSettings" bundle="com.dci.intellij.dbn.common.DBNBundle" groupId="tools" dynamic="true"/>
+
+        <toolWindow id="DB Browser" icon="/img/window/DatabaseBrowser.png" anchor="left" factoryClass="com.dci.intellij.dbn.browser.DatabaseBrowserToolWindowFactory"/>
+
+        <fileTypeFactory order="last" implementation="com.dci.intellij.dbn.language.sql.SQLFileTypeFactory"/>
+        <fileTypeFactory order="last" implementation="com.dci.intellij.dbn.language.psql.PSQLFileTypeFactory"/>
+
+        <fileIconProvider order="last" implementation="com.dci.intellij.dbn.vfs.DBFileIconProvider"/>
+
+        <colorSettingsPage implementation="com.dci.intellij.dbn.code.sql.color.SQLColorSettingsPage"/>
+        <colorSettingsPage implementation="com.dci.intellij.dbn.code.psql.color.PSQLColorSettingsPage"/>
+        <colorSettingsPage implementation="com.dci.intellij.dbn.data.grid.color.DataGridColorSettingsPage"/>
+        <colorSettingsPage implementation="com.dci.intellij.dbn.editor.session.color.SessionBrowserColorSettingsPage"/>
+
+        <syntaxHighlighter key="DBN-SQL" factoryClass="com.dci.intellij.dbn.language.common.DBSyntaxHighlighterProvider"/>
+        <syntaxHighlighter key="DBN-PSQL" factoryClass="com.dci.intellij.dbn.language.common.DBSyntaxHighlighterProvider"/>
+
+        <lang.syntaxHighlighterFactory key="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.common.DBSyntaxHighlighterFactory"/>
+        <lang.syntaxHighlighterFactory key="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.common.DBSyntaxHighlighterFactory"/>
+
+        <codeStyleSettingsProvider implementation="com.dci.intellij.dbn.code.sql.style.options.SQLCodeStyleSettingsProvider"/>
+        <codeStyleSettingsProvider implementation="com.dci.intellij.dbn.code.psql.style.options.PSQLCodeStyleSettingsProvider"/>
+
+        <lang.parserDefinition language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.SQLParserDefinition"/>
+        <lang.parserDefinition language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.PSQLParserDefinition"/>
+
+        <lang.commenter language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.common.DBLanguageCommenter"/>
+        <lang.commenter language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.common.DBLanguageCommenter"/>
+
+        <annotator language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.SQLLanguageAnnotator"/>
+        <annotator language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.PSQLLanguageAnnotator"/>
+
+        <lang.documentationProvider language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.SQLDocumentationProvider"/>
+        <lang.documentationProvider language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.PSQLDocumentationProvider"/>
+
+        <lang.braceMatcher language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.SQLLanguageBraceMatcher"/>
+        <lang.braceMatcher language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.PSQLLanguageBraceMatcher"/>
+
+        <lang.formatter language="DBN-SQL" implementationClass="com.dci.intellij.dbn.code.common.style.formatting.DBLFormattingModelBuilder"/>
+        <lang.formatter language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.code.common.style.formatting.DBLFormattingModelBuilder"/>
+
+        <lang.foldingBuilder language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.SQLFoldingBuilder"/>
+        <lang.foldingBuilder language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.PSQLFoldingBuilder"/>
+
+        <completion.contributor language="DBN-SQL" implementationClass="com.dci.intellij.dbn.code.common.completion.CodeCompletionContributor"/>
+        <completion.contributor language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.code.common.completion.CodeCompletionContributor"/>
+
+        <lang.psiStructureViewFactory language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.sql.structure.SQLStructureViewBuilderFactory"/>
+        <lang.psiStructureViewFactory language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.psql.structure.PSQLStructureViewBuilderFactory"/>
+
+        <lang.fileViewProviderFactory language="DBN-SQL" implementationClass="com.dci.intellij.dbn.vfs.DatabaseFileViewProviderFactory"/>
+        <lang.fileViewProviderFactory language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.vfs.DatabaseFileViewProviderFactory"/>
+
+        <codeInsight.parameterInfo language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.common.parameter.MethodParameterInfoHandler"/>
+        <codeInsight.parameterInfo language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.common.parameter.MethodParameterInfoHandler"/>
+
+        <codeInsight.parameterInfo language="DBN-SQL" implementationClass="com.dci.intellij.dbn.language.common.parameter.ColumnParameterInfoHandler"/>
+        <codeInsight.parameterInfo language="DBN-PSQL" implementationClass="com.dci.intellij.dbn.language.common.parameter.ColumnParameterInfoHandler"/>
+
+        <elementSignatureProvider order="last" implementation="com.dci.intellij.dbn.language.common.DBLanguageElementSignatureProvider"/>
+
+        <xdebugger.settings implementation="com.dci.intellij.dbn.debugger.settings.DBProgramDebuggerSettings"/>
+        <xdebugger.breakpointType implementation="com.dci.intellij.dbn.debugger.breakpoint.DBProgramBreakpointType"/>
+        <programRunner implementation="com.dci.intellij.dbn.debugger.execution.DBProgramRunner"/>
+        <configurationType implementation="com.dci.intellij.dbn.debugger.execution.DBProgramRunConfigurationType"/>
+        <navbar order="last" implementation="com.dci.intellij.dbn.navigation.NavigationBarExtension"/>
+        <editorTabColorProvider order="first" implementation="com.dci.intellij.dbn.editor.DBEditorTabColorProvider"/>
+
+        <errorHandler implementation="com.dci.intellij.dbn.error.DBNErrorReportSubmitter"/>
+        <liveTemplateContext implementation="com.dci.intellij.dbn.language.sql.template.SQLTemplateContextType"/>
+        <liveTemplateContext implementation="com.dci.intellij.dbn.language.psql.template.PSQLTemplateContextType"/>
+        <defaultLiveTemplatesProvider implementation="com.dci.intellij.dbn.language.sql.template.SQLTemplateProvider"/>
+        <defaultLiveTemplatesProvider implementation="com.dci.intellij.dbn.language.psql.template.PSQLTemplateProvider"/>
+        <editorNotificationProvider implementation="com.dci.intellij.dbn.ddl.DDLMappedNotificationProvider"/>
+        <editorNotificationProvider implementation="com.dci.intellij.dbn.editor.code.SourceCodeEditorNotificationProvider"/>
+        <editorNotificationProvider implementation="com.dci.intellij.dbn.editor.data.DatasetEditorNotificationProvider"/>
+        <editorNotificationProvider implementation="com.dci.intellij.dbn.editor.session.SessionBrowserNotificationProvider"/>
+
+        <additionalTextAttributes scheme="Default" file="resources/DBNDefaultColors.xml" id="DBN-Default"/>
+        <additionalTextAttributes scheme="Darcula" file="resources/DBNDarculaColors.xml" id="DBN-Darcula"/>
+
+    </extensions>
+    <helpset file="help.jar" path="/Help.hs"/>
+
+</idea-plugin>

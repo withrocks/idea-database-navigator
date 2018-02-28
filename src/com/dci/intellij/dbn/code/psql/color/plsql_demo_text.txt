@@ -1,0 +1,29 @@
+/*
+ Name: Database Navigator
+ Version: 2.0
+ PL/SQL demo text
+ */
+ 
+procedure ADD_JOB_HISTORY(  
+    p_emp_id          JOB_HISTORY.EMPLOYEE_ID%TYPE, 
+    p_start_date      JOB_HISTORY.START_DATE%TYPE, 
+    p_end_date        JOB_HISTORY.END_DATE%TYPE, 
+    p_job_id          JOB_HISTORY.JOB_ID%TYPE, 
+    p_department_id   JOB_HISTORY.DEPARTMENT_ID%TYPE)
+is
+begin
+  -- insert statement
+    insert into JOB_HISTORY (
+        EMPLOYEE_ID, 
+        START_DATE, 
+        END_DATE,
+        JOB_ID, 
+        DEPARTMENT_ID)
+    values(
+        p_emp_id, 
+        p_start_date, 
+        p_end_date, 
+        p_job_id, 
+        p_department_id);
+        
+end ADD_JOB_HISTORY;

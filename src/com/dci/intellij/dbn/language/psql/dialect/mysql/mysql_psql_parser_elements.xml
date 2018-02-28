@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE element-defs SYSTEM "/../../../common/definition/language-parser-elements.dtd">-->
+<element-defs language="MYSQL-PSQL" version="5.6">
+    <element-def attributes="ROOT" description="PSQL block" icon="FILE_BLOCK_PSQL" id="psql_block">
+    </element-def>
+</element-defs>

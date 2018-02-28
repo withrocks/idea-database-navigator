@@ -1,0 +1,675 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                is-query CDATA #IMPLIED
+                is-prepared-statement CDATA #IMPLIED
+                timeout CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        ]>
+<data-dictionary>
+    <statement-execution-processor id="schemas" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                SCHEMA_NAME,
+                'N' as IS_PUBLIC,
+                if(lower(SCHEMA_NAME)='information_schema', 'Y', 'N') as IS_SYSTEM,
+                'N' as IS_EMPTY
+            from information_schema.SCHEMATA
+            order by SCHEMA_NAME asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="users" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                GRANTEE as USER_NAME,
+                'N' as IS_EXPIRED,
+                'N' as IS_LOCKED
+            from information_schema.USER_PRIVILEGES
+            order by GRANTEE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="system-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct PRIVILEGE_TYPE as PRIVILEGE_NAME
+            from information_schema.USER_PRIVILEGES
+            order by PRIVILEGE_TYPE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-user-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                GRANTEE as USER_NAME,
+                PRIVILEGE_TYPE as GRANTED_PRIVILEGE_NAME,
+                IS_GRANTABLE as IS_ADMIN_OPTION
+            from information_schema.USER_PRIVILEGES
+            order by GRANTEE, PRIVILEGE_TYPE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="charsets" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                CHARACTER_SET_NAME as CHARSET_NAME,
+                MAXLEN as MAX_LENGTH
+            from information_schema.CHARACTER_SETS
+            order by CHARACTER_SET_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="tables" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME,
+                'N' as IS_TEMPORARY
+            from  information_schema.TABLES
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_TYPE = 'BASE TABLE'
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="views" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME as VIEW_NAME,
+                null as VIEW_TYPE_OWNER,
+                null as VIEW_TYPE,
+                if (TABLE_TYPE = 'VIEW', 'N', 'Y') as IS_SYSTEM_VIEW
+            from information_schema.TABLES
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_TYPE in ('VIEW', 'SYSTEM VIEW')
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-columns" is-query="true" is-prepared-statement="true">
+        <!--<statement>
+            select
+                col.COLUMN_NAME,
+                col.ORDINAL_POSITION as `POSITION`,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                if(col.COLUMN_KEY = 'PRI', 'Y', 'N') as IS_PRIMARY_KEY,
+                if(con.CONSTRAINT_NAME is null, 'N', 'Y') as IS_FOREIGN_KEY
+            from information_schema.`COLUMNS` col
+                    left join (
+                        select
+                            rc.CONSTRAINT_SCHEMA,
+                            rc.TABLE_NAME,
+                            rc.CONSTRAINT_NAME,
+                            kcu.COLUMN_NAME
+                        from
+                            information_schema.KEY_COLUMN_USAGE kcu,
+                            information_schema.REFERENTIAL_CONSTRAINTS rc
+                        where
+                            rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                            rc.TABLE_NAME = kcu.TABLE_NAME and
+                            rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME) con on
+                                    con.CONSTRAINT_SCHEMA = col.TABLE_SCHEMA and
+                                    con.TABLE_NAME = col.TABLE_NAME and
+                                    con.COLUMN_NAME = col.COLUMN_NAME
+            where
+                col.TABLE_SCHEMA = {0} and
+                col.TABLE_NAME = {1}
+            order by col.COLUMN_NAME asc
+        </statement>-->
+        <statement>
+            select
+                col.COLUMN_NAME,
+                col.ORDINAL_POSITION as `POSITION`,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                if(col.COLUMN_KEY = 'PRI', 'Y', 'N') as IS_PRIMARY_KEY,
+                if(kcu.COLUMN_NAME is null, 'N', 'Y') as IS_FOREIGN_KEY,
+                'N' as IS_UNIQUE_KEY
+            from information_schema.`COLUMNS` col
+                    left join (
+                        select
+                            TABLE_SCHEMA,
+                            TABLE_NAME,
+                            COLUMN_NAME
+                    from information_schema.KEY_COLUMN_USAGE
+                    where REFERENCED_COLUMN_NAME is not null) kcu on
+                        kcu.TABLE_SCHEMA = col.TABLE_SCHEMA and
+                        kcu.TABLE_NAME = col.TABLE_NAME and
+                        kcu.COLUMN_NAME = col.COLUMN_NAME
+            where
+                col.TABLE_SCHEMA = {0} and
+                col.TABLE_NAME = {1}
+            order by col.COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-columns" is-query="true" is-prepared-statement="true">
+       <!-- <statement>
+            select
+                col.COLUMN_NAME,
+                col.TABLE_NAME as DATASET_NAME,
+                col.ORDINAL_POSITION as `POSITION`,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                if(col.COLUMN_KEY = 'PRI', 'Y', 'N') as IS_PRIMARY_KEY,
+                if(con.CONSTRAINT_NAME is null, 'N', 'Y') as IS_FOREIGN_KEY
+            from information_schema.`COLUMNS` col
+                    left join (
+                        select
+                            rc.CONSTRAINT_SCHEMA,
+                            rc.TABLE_NAME,
+                            rc.CONSTRAINT_NAME,
+                            kcu.COLUMN_NAME
+                        from
+                            information_schema.KEY_COLUMN_USAGE kcu,
+                            information_schema.REFERENTIAL_CONSTRAINTS rc
+                        where
+                            rc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                            rc.TABLE_NAME = kcu.TABLE_NAME and
+                            rc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME) con on
+                                    con.CONSTRAINT_SCHEMA = col.TABLE_SCHEMA and
+                                    con.TABLE_NAME = col.TABLE_NAME and
+                                    con.COLUMN_NAME = col.COLUMN_NAME
+            where
+                col.TABLE_SCHEMA = {0}
+            order by
+                col.TABLE_NAME,
+                col.COLUMN_NAME asc
+        </statement>-->
+        <statement>
+            select
+                col.COLUMN_NAME,
+                col.TABLE_NAME as DATASET_NAME,
+                col.ORDINAL_POSITION as `POSITION`,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                if(col.COLUMN_KEY = 'PRI', 'Y', 'N') as IS_PRIMARY_KEY,
+                if(kcu.COLUMN_NAME is null, 'N', 'Y') as IS_FOREIGN_KEY,
+                'N' as IS_UNIQUE_KEY
+            from information_schema.`COLUMNS` col
+                    left join (
+                        select
+                            TABLE_SCHEMA,
+                            TABLE_NAME,
+                            COLUMN_NAME
+                    from information_schema.KEY_COLUMN_USAGE
+                    where REFERENCED_COLUMN_NAME is not null) kcu on
+                        kcu.TABLE_SCHEMA = col.TABLE_SCHEMA and
+                        kcu.TABLE_NAME = col.TABLE_NAME and
+                        kcu.COLUMN_NAME = col.COLUMN_NAME
+            where
+                col.TABLE_SCHEMA = {0}
+            order by
+                col.TABLE_NAME,
+                col.COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-constraints" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                case
+                    when tc.CONSTRAINT_TYPE = 'PRIMARY KEY' then concat('pk_', tc.TABLE_NAME)
+                    when tc.CONSTRAINT_TYPE = 'UNIQUE' then concat('unq_', tc.TABLE_NAME)
+                    else tc.CONSTRAINT_NAME
+                end as CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                rc.UNIQUE_CONSTRAINT_SCHEMA as FK_CONSTRAINT_OWNER,
+                case
+                    when rc.UNIQUE_CONSTRAINT_NAME = 'PRIMARY' then concat('pk_', rc.REFERENCED_TABLE_NAME)
+                    when rc.UNIQUE_CONSTRAINT_NAME = 'name' then concat('unq_', rc.REFERENCED_TABLE_NAME)
+                    else rc.UNIQUE_CONSTRAINT_NAME
+                end as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                null as CHECK_CONDITION
+            from
+                information_schema.TABLE_CONSTRAINTS tc left join
+                information_schema.REFERENTIAL_CONSTRAINTS rc on
+                    rc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA and
+                    rc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME and
+                    rc.TABLE_NAME = tc.TABLE_NAME
+            where
+                tc.TABLE_SCHEMA = {0}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                case
+                    when tc.CONSTRAINT_TYPE = 'PRIMARY KEY' then concat('pk_', tc.TABLE_NAME)
+                    when tc.CONSTRAINT_TYPE = 'UNIQUE' then concat('unq_', tc.TABLE_NAME)
+                    else tc.CONSTRAINT_NAME
+                end as CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                null as FK_CONSTRAINT_OWNER,
+                null as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                null as CHECK_CONDITION
+            from
+                information_schema.TABLE_CONSTRAINTS tc
+            where
+                tc.TABLE_SCHEMA = {0}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="constraints" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                case
+                    when tc.CONSTRAINT_TYPE = 'PRIMARY KEY' then concat('pk_', tc.TABLE_NAME)
+                    when tc.CONSTRAINT_TYPE = 'UNIQUE' then concat('unq_', tc.TABLE_NAME)
+                    else tc.CONSTRAINT_NAME
+                end as CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                rc.UNIQUE_CONSTRAINT_SCHEMA as FK_CONSTRAINT_OWNER,
+                case
+                    when rc.UNIQUE_CONSTRAINT_NAME = 'PRIMARY' then concat('pk_', rc.REFERENCED_TABLE_NAME)
+                    when rc.UNIQUE_CONSTRAINT_NAME = 'name' then concat('unq_', rc.REFERENCED_TABLE_NAME)
+                    else rc.UNIQUE_CONSTRAINT_NAME
+                end as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                null as CHECK_CONDITION
+            from
+                information_schema.TABLE_CONSTRAINTS tc left join
+                information_schema.REFERENTIAL_CONSTRAINTS rc on
+                    rc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA and
+                    rc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME and
+                    rc.TABLE_NAME = tc.TABLE_NAME
+            where
+                tc.TABLE_SCHEMA = {0} and
+                tc.TABLE_NAME = {1}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                case
+                    when tc.CONSTRAINT_TYPE = 'PRIMARY KEY' then concat('pk_', tc.TABLE_NAME)
+                    when tc.CONSTRAINT_TYPE = 'UNIQUE' then concat('unq_', tc.TABLE_NAME)
+                    else tc.CONSTRAINT_NAME
+                end as CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                null as FK_CONSTRAINT_OWNER,
+                null as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                null as CHECK_CONDITION
+            from
+                information_schema.TABLE_CONSTRAINTS tc
+            where
+                tc.TABLE_SCHEMA = {0} and
+                tc.TABLE_NAME = {1}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                COLUMN_NAME,
+                case
+                    when CONSTRAINT_NAME = 'PRIMARY' then concat('pk_', TABLE_NAME)
+                    when CONSTRAINT_NAME = 'name' then concat('unq_', TABLE_NAME)
+                    else CONSTRAINT_NAME
+                end as CONSTRAINT_NAME,
+                ORDINAL_POSITION as POSITION
+            from information_schema.KEY_COLUMN_USAGE
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+               TABLE_NAME as DATASET_NAME,
+               COLUMN_NAME,
+               case
+                    when CONSTRAINT_NAME = 'PRIMARY' then concat('pk_', TABLE_NAME)
+                    when CONSTRAINT_NAME = 'name' then concat('unq_', TABLE_NAME)
+                    else CONSTRAINT_NAME
+               end as CONSTRAINT_NAME,
+               ORDINAL_POSITION as POSITION
+            from information_schema.KEY_COLUMN_USAGE
+            where TABLE_SCHEMA = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="indexes" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                INDEX_NAME,
+                if (NON_UNIQUE = 'YES', 'N', 'Y') as IS_UNIQUE,
+                'Y' as IS_VALID
+            from information_schema.STATISTICS
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+            order by INDEX_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-indexes" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                INDEX_NAME,
+                TABLE_NAME,
+                if (NON_UNIQUE = 'YES', 'N', 'Y') as IS_UNIQUE,
+                'Y' as IS_VALID
+            from information_schema.STATISTICS
+            where TABLE_SCHEMA = {0}
+            order by
+                TABLE_NAME,
+                INDEX_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                COLUMN_NAME,
+                INDEX_NAME
+            from information_schema.STATISTICS
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME,
+                COLUMN_NAME,
+                INDEX_NAME
+            from information_schema.STATISTICS
+            where TABLE_SCHEMA = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                EVENT_OBJECT_TABLE as DATASET_NAME,
+                TRIGGER_NAME,
+                ACTION_TIMING as TRIGGER_TYPE,
+                EVENT_MANIPULATION as TRIGGERING_EVENT,
+                'Y' as IS_ENABLED,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_FOR_EACH_ROW
+            from information_schema.TRIGGERS
+            where
+                EVENT_OBJECT_SCHEMA = {0} and
+                EVENT_OBJECT_TABLE = {1}
+            order by TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                EVENT_OBJECT_TABLE as DATASET_NAME,
+                TRIGGER_NAME,
+                ACTION_TIMING as TRIGGER_TYPE,
+                EVENT_MANIPULATION as TRIGGERING_EVENT,
+                'Y' as IS_ENABLED,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_FOR_EACH_ROW
+            from information_schema.TRIGGERS
+            where EVENT_OBJECT_SCHEMA = {0}
+            order by
+                EVENT_OBJECT_TABLE,
+                TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="functions" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                ROUTINE_NAME as FUNCTION_NAME,
+                0 as POSITION,
+                0 as OVERLOAD,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                left(IS_DETERMINISTIC, 1) as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from information_schema.ROUTINES
+            where
+                ROUTINE_SCHEMA = {0} and
+                ROUTINE_TYPE = 'FUNCTION'
+            order by ROUTINE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="procedures" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                ROUTINE_NAME as PROCEDURE_NAME,
+                0 as POSITION,
+                0 as OVERLOAD,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                left(IS_DETERMINISTIC, 1) as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from information_schema.ROUTINES
+            where
+                ROUTINE_SCHEMA = {0} and
+                ROUTINE_TYPE = 'PROCEDURE'
+            order by ROUTINE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                PARAMETER_NAME as ARGUMENT_NAME,
+                null as PROGRAM_NAME,
+                SPECIFIC_NAME as METHOD_NAME,
+                ROUTINE_TYPE as METHOD_TYPE,
+                0 as OVERLOAD,
+                ORDINAL_POSITION as POSITION,
+                ORDINAL_POSITION as SEQUENCE,
+                if (PARAMETER_MODE is null, 'OUT', PARAMETER_MODE) as IN_OUT,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                DATA_TYPE as DATA_TYPE_NAME,
+                CHARACTER_MAXIMUM_LENGTH  as DATA_LENGTH,
+                NUMERIC_PRECISION as DATA_PRECISION,
+                NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET
+            from information_schema.PARAMETERS
+            where
+                SPECIFIC_SCHEMA = {0} and
+                SPECIFIC_NAME = {1} and
+                ROUTINE_TYPE = {2}
+            order by
+                SPECIFIC_NAME,
+                ORDINAL_POSITION asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="alternative-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                case when TYPE = 'FUNCTION' then concat('OUT return ', RETURNS, ', ', PARAM_LIST) else PARAM_LIST end as ARGUMENTS,
+                NAME as METHOD_NAME,
+                TYPE as METHOD_TYPE
+            from mysql.proc
+            where
+                DB = {0} and
+                NAME = {1} and
+                TYPE = {2}
+        </statement>
+    </statement-execution-processor>
+
+
+    <statement-execution-processor id="all-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                PARAMETER_NAME as ARGUMENT_NAME,
+                null as PROGRAM_NAME,
+                SPECIFIC_NAME as METHOD_NAME,
+                ROUTINE_TYPE as METHOD_TYPE,
+                0 as OVERLOAD,
+                ORDINAL_POSITION as POSITION,
+                ORDINAL_POSITION as SEQUENCE,
+                if (PARAMETER_MODE is null, 'OUT', PARAMETER_MODE) as IN_OUT,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                DATA_TYPE as DATA_TYPE_NAME,
+                CHARACTER_MAXIMUM_LENGTH  as DATA_LENGTH,
+                NUMERIC_PRECISION as DATA_PRECISION,
+                NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET
+            from information_schema.PARAMETERS
+            where
+                SPECIFIC_SCHEMA = {0}
+            order by
+                SPECIFIC_NAME,
+                ORDINAL_POSITION asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="alternative-all-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                case when TYPE = 'FUNCTION' then concat('OUT return ', RETURNS, ', ', PARAM_LIST) else PARAM_LIST end as ARGUMENTS,
+                NAME as METHOD_NAME,
+                TYPE as METHOD_TYPE
+            from mysql.proc
+            where DB = {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="view-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select VIEW_DEFINITION
+            from information_schema.VIEWS
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+        </statement>
+    </statement-execution-processor>    
+
+    <statement-execution-processor id="dataset-trigger-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select concat(
+                'trigger ',
+                TRIGGER_NAME,
+                '$$DBN_GUARDED_BLOCK_END_OFFSET$$\n', lower(ACTION_TIMING), ' ',
+                lower(EVENT_MANIPULATION),
+                '\n on ',
+                EVENT_OBJECT_SCHEMA, '.', EVENT_OBJECT_TABLE,
+                '\n for each row ',
+                '\n', ACTION_STATEMENT)
+            from information_schema.TRIGGERS
+            where
+                TRIGGER_SCHEMA = {2} and
+                TRIGGER_NAME = {3}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select concat(
+                lower(TYPE), ' ', NAME,
+                '$$DBN_GUARDED_BLOCK_END_OFFSET$$(', PARAM_LIST, ')',
+                if({2}='FUNCTION', '\nRETURNS ', ''), RETURNS,
+                '\nLANGUAGE ', LANGUAGE,
+                if(IS_DETERMINISTIC = 'YES', '\nDETERMINISTIC', ''),
+                case when SQL_DATA_ACCESS = 'READS_SQL_DATA' then '\nREADS SQL DATA'
+                     when SQL_DATA_ACCESS = 'CONTAINS_SQL' then '\nREADS SQL DATA' end,
+                '\nSQL SECURITY ', SECURITY_TYPE,
+                '\n', BODY)
+            from mysql.proc
+            where
+                DB = {0} and
+                NAME = {1} and
+                TYPE = {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-change-timestamp" is-query="true" is-prepared-statement="true">
+        <statement>
+            select MODIFIED
+            from mysql.proc
+            where
+                DB = {0} and
+                NAME = {1} and
+                TYPE = {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="load-distinct-values" is-query="true">
+        <statement>
+            select distinct {2} from {0}.{1} where {2} is not null order by {2}
+        </statement>
+    </statement-execution-processor>    
+
+    <statement-execution-processor id="set-current-schema">
+        <statement>
+            use {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="validate-connection" timeout="5" is-prepared-statement="true">
+        <statement>
+            select 1
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="sessions" is-prepared-statement="true">
+        <statement>
+            show processlist
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="kill-session" is-prepared-statement="true">
+        <statement>
+            kill {0}
+        </statement>
+    </statement-execution-processor>
+
+</data-dictionary>

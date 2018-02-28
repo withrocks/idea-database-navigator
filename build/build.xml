@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="dbnavigator" default="all">
+
+    <property file="build.properties"/>
+    <property name="skip.tests" value="true"/>
+
+    <!-- Compiler options -->
+    <patternset id="compiler.ignored.files">
+        <exclude name="**/CVS/**"/>
+        <exclude name="**/SCCS/**"/>
+        <exclude name="**/RCS/**"/>
+        <exclude name="**/rcs/**"/>
+        <exclude name="**/.DS_Store/**"/>
+        <exclude name="**/.svn/**"/>
+        <exclude name="**/*.awf/**"/>
+        <exclude name="**/*.iml/**"/>
+        <exclude name="**/vssver.scc/**"/>
+        <exclude name="**/vssver2.scc/**"/>
+        <exclude name="**/.sbas/**"/>
+        <exclude name="**/.IJI.*/**"/>
+        <exclude name="**/.cvsignore/**"/>
+        <exclude name="**/.*/**"/>
+    </patternset>
+    <patternset id="compiler.resources">
+        <include name="**/?*.properties"/>
+        <include name="**/?*.xml"/>
+        <include name="**/?*.gif"/>
+        <include name="**/?*.png"/>
+        <include name="**/?*.jpeg"/>
+        <include name="**/?*.jpg"/>
+        <include name="**/?*.html"/>
+        <include name="**/?*.dtd"/>
+        <include name="**/?*.tld"/>
+        <include name="**/?*.txt"/>
+    </patternset>
+
+    <dirname property="root.dir" file="${ant.file}/.."/>
+    <property name="source.dir" value="${root.dir}/src"/>
+    <property name="help.dir" value="${root.dir}/help"/>
+    <property name="compiler.output.dir" value="${root.dir}/classes"/>
+    <property name="distribution.dir" value="${root.dir}/dist"/>
+    <property name="help.jar" value="${distribution.dir}/Help.jar"/>
+<!--
+    <property name="deployment.dir" value="${idea.plugins.sandbox}/DBNavigator"/>
+-->
+
+    <path id="source.dir">
+        <dirset dir="${root.dir}">
+            <include name="src"/>
+        </dirset>
+    </path>
+
+    <path id="classpath.ide">
+        <fileset dir="${idea.home}">
+            <include name="lib/*.jar"/>
+            <include name="redist/*.jar"/>
+        </fileset>
+    </path>
+    <path id="classpath.project">
+        <fileset dir="${root.dir}">
+            <include name="lib/*.jar"/>
+        </fileset>
+    </path>
+
+
+    <taskdef name="javac2" classname="com.intellij.uiDesigner.ant.Javac2">
+        <classpath refid="classpath.ide"/>
+    </taskdef>
+
+
+    <target name="compile" description="Compile">
+        <mkdir dir="${compiler.output.dir}"/>
+        <javac2 srcdir="${source.dir}"
+                destdir="${compiler.output.dir}"
+                source="1.6"
+                target="1.6"
+                debug="true"
+                fork="true"
+                >
+            <patternset refid="compiler.ignored.files"/>
+            <classpath refid="classpath.ide"/>
+            <classpath refid="classpath.project"/>
+            <!--<exclude name="com/**/*" />-->
+        </javac2>
+
+        <copy todir="${compiler.output.dir}">
+            <fileset dir="${source.dir}">
+                <patternset refid="compiler.resources"/>
+                <type type="file"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="cleanup" description="Cleanup">
+        <delete dir="${distribution.dir}"/>
+        <delete dir="${compiler.output.dir}"/>
+<!--
+        <delete dir="${deployment.dir}"/>
+-->
+    </target>
+
+    <target name="build" depends="compile" description="Build deployment and distribution components">
+        <antcall target="build.dist"/>
+    </target>
+
+<!--
+    <target name="deploy" depends="build" description="Deploy to sandbox">
+        <copy todir="${deployment.dir}/classes">
+            <fileset dir="${compiler.output.dir}"/>
+        </copy>
+        <copy file="${source.dir}/META-INF/plugin.xml" tofile="${deployment.dir}/META-INF/plugin.xml"/>
+        <copy file="${distribution.dir}/help.jar" todir="${deployment.dir}/help"/>
+    </target>
+-->
+
+    <target name="build.dist" description="Build distribution archives">
+        <mkdir dir="${distribution.dir}" />
+        <antcall target="build.jar"/>
+        <antcall target="build.help"/>
+        <antcall target="build.zip"/>
+        <antcall target="build.src"/>
+    </target>
+
+    <target name="build.jar" description="Build plugin jar">
+        <jar destfile="${distribution.dir}/DBNavigator.jar" duplicate="preserve">
+            <zipfileset dir="${compiler.output.dir}" prefix=""/>
+            <zipfileset file="${source.dir}/META-INF/plugin.xml" prefix="META-INF"/>
+            <manifest>
+                <attribute name="Created-By" value="IntelliJ IDEA"/>
+                <attribute name="Manifest-Version" value="1.0"/>
+            </manifest>
+        </jar>
+    </target>
+    <target name="build.help" description="Build help jar">
+        <jar destfile="${help.jar}" duplicate="preserve">
+            <zipfileset dir="${help.dir}" prefix=""/>
+        </jar>
+    </target>
+    <target name="build.zip" description="Build distribution zip file">
+        <zip file="${distribution.dir}/${package.name}">
+            <zipfileset dir="${distribution.dir}" prefix="DBNavigator/lib">
+                <include name="DBNavigator.jar"/>
+            </zipfileset>
+            <zipfileset dir="${root.dir}/lib" prefix="DBNavigator/lib">
+                <include name="*.jar"/>
+            </zipfileset>
+
+            <zipfileset dir="${distribution.dir}" prefix="DBNavigator/help">
+                <include name="Help.jar"/>
+            </zipfileset>
+        </zip>
+    </target>
+    <target name="build.src" description="Build distribution src file">
+        <zip file="${distribution.dir}/src.zip">
+            <zipfileset dir=".." prefix="DBNavigator">
+                <include name="src/**/*"/>
+                <include name="help/**/*"/>
+                <include name="build/**/*"/>
+                <include name="lib/**/*"/>
+
+                <include name="*.iml"/>
+                <include name="*.ipr"/>
+                <include name="*.iws"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name="init" description="Build initialization">
+        <!-- Perform any build initialization in this target -->
+    </target>
+
+    <target name="clean" depends="cleanup" description="cleanup all"/>
+
+    <target name="all" depends="init, clean, build" description="build all"/>
+</project>

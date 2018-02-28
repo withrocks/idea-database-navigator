@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE element-defs SYSTEM "/../../../common/definition/language-parser-elements.dtd">-->
+        
+<element-defs version="SQL 92" language="ORACLE-SQL">
+    <element-def description="SQL block" id="sql_block" attributes="ROOT, STRUCTURE">
+        <iteration id="000000000">
+            <one-of id="000000001" attributes="STATEMENT">
+                <element ref-id="query_specification" />
+            </one-of>
+        </iteration>
+    </element-def>
+
+    <!-- ========= select ========= -->
+    <element-def description="SELECT statement" id="query_specification" attributes="EXECUTABLE, DATA_MANIPULATION, QUERY, STRUCTURE">
+        <token id="000000002" type-id="KW_SELECT" />
+        <element optional="true" ref-id="set_quantifier" />
+        <element ref-id="select_list" />
+        <element ref-id="table_expression" />
+    </element-def>
+    <element-def description="Set quantifier" id="set_quantifier">
+        <one-of id="000000003">
+            <token id="000000004" type-id="KW_DISTINCT" />
+            <token id="000000005" type-id="KW_ALL" />
+        </one-of>
+    </element-def>
+    <element-def description="Select list" id="select_list">
+        <one-of id="000000006">
+            <token id="000000007" original-name="asterisk" type-id="CHR_STAR" />
+            <iteration id="000000008" separator="CHR_COMMA">
+                <element ref-id="select_sublist" />
+            </iteration>
+        </one-of>
+    </element-def>
+    <element-def description="Select sublist" id="select_sublist">
+        <one-of id="000000009">
+            <element ref-id="derived_column" />
+            <sequence id="000000010">
+                <element ref-id="qualifier" />
+                <element ref-id="period" />
+                <token id="000000011" original-name="asterisk" type-id="CHR_STAR" />
+            </sequence>
+        </one-of>
+    </element-def>
+    <element-def description="Derived column" id="derived_column">
+        <element ref-id="value_expression" />
+        <element optional="true" ref-id="as_clause" />
+    </element-def>
+    <element-def description="AS clause" id="as_clause">
+        <token id="000000012" optional="true" type-id="KW_AS" />
+        <alias-def id="000000013" original-name="column_name" type="COLUMN" />
+    </element-def>
+    <element-def description="Value expression" id="value_expression">
+        <one-of id="000000014">
+            <element ref-id="numeric_value_expression" />
+            <element ref-id="string_value_expression" />
+            <element ref-id="datetime_value_expression" />
+            <element ref-id="interval_value_expression" />
+        </one-of>
+    </element-def>
+    <element-def description="Numeric value expression" id="numeric_value_expression">
+        <sequence id="000000015" optional="true">
+            <element ref-id="numeric_value_expression" />
+            <element ref-id="sign" />
+        </sequence>
+        <element ref-id="term" />
+    </element-def>
+    <element-def description="Term" id="term">
+        <sequence id="000000016" optional="true">
+            <element ref-id="term" />
+            <one-of id="000000017">
+                <token id="000000018" original-name="asterisk" type-id="CHR_STAR" />
+                <token id="000000019" original-name="solidus" type-id="CHR_SLASH" />
+            </one-of>
+        </sequence>
+        <element ref-id="factor" />
+    </element-def>
+    <element-def description="factor" id="factor">
+        <element optional="true" ref-id="sign" />
+        <element ref-id="numeric_primary" />
+    </element-def>
+    <element-def description="Numeric primary" id="numeric_primary">
+        <one-of id="000000020">
+            <element ref-id="value_expression_primary" />
+            <element ref-id="numeric_value_function" />
+        </one-of>
+    </element-def>
+    <element-def description="Value expression primary" id="value_expression_primary">
+        <one-of id="000000021">
+            <element ref-id="unsigned_value_specification" />
+            <element ref-id="column_reference" />
+            <element ref-id="set_function_specification" />
+            <element ref-id="scalar_subquery" />
+            <element ref-id="case_expression" />
+            <sequence id="000000022">
+                <token id="000000023" type-id="CHR_LEFT_PARENTHESIS" />
+                <element ref-id="value_expression" />
+                <token id="000000024" type-id="CHR_RIGHT_PARENTHESIS" />
+            </sequence>
+            <element ref-id="cast_specification" />
+        </one-of>
+    </element-def>
+    <element-def description="Unsigned value specification" id="unsigned_value_specification">
+        <one-of id="000000025">
+            <element ref-id="unsigned_literal" />
+            <element ref-id="general_value_specification" />
+        </one-of>
+    </element-def>
+    <element-def description="Unsigned literal" id="unsigned_literal">
+        <one-of id="000000026">
+            <element ref-id="unsigned_numeric_literal" />
+            <element ref-id="general_literal" />
+        </one-of>
+    </element-def>
+    <element-def description="General value specification" id="general_value_specification">
+        <one-of id="000000027">
+            <element ref-id="parameter_specification" />
+            <element ref-id="dynamic_parameter_specification" />
+            <element ref-id="variable_specification" />
+            <token id="000000028" type-id="KW_USER" />
+            <token id="000000029" type-id="KW_CURRENT_USER" />
+            <token id="000000030" type-id="KW_SESSION_USER" />
+            <token id="000000031" type-id="KW_SYSTEM_USER" />
+            <token id="000000032" type-id="KW_VALUE" />
+        </one-of>
+    </element-def>
+    <element-def description="Parameter specification" id="parameter_specification">
+        <element ref-id="parameter_name" />
+        <element optional="true" ref-id="indicator_parameter" />
+    </element-def>
+    <element-def description="Parameter name" id="parameter_name">
+        <token id="000000033" type-id="CHR_COLON" />
+        <token id="000000034" original-name="identifier" type-id="IDENTIFIER" />
+    </element-def>
+    <element-def description="Indicator parameter" id="indicator_parameter">
+        <token id="000000035" optional="true" type-id="KW_INDICATOR" />
+        <element ref-id="parameter_name" />
+    </element-def>
+    <element-def description="Dynamic parameter specification" id="dynamic_parameter_specification">
+        <token id="000000036" original-name="question_mark" type-id="CHR_QUESTION_MARK" />
+    </element-def>
+    <element-def description="Variable specification" id="variable_specification">
+        <element ref-id="embedded_variable_name" />
+        <element optional="true" ref-id="indicator_variable" />
+    </element-def>
+    <element-def description="Embedded variable name" id="embedded_variable_name">
+        <token id="000000037" type-id="CHR_COLON" />
+        <token id="000000038" original-name="host_identifier" type-id="IDENTIFIER" />
+    </element-def>
+    <element-def description="Indicator variable" id="indicator_variable">
+        <token id="000000039" optional="true" type-id="KW_INDICATOR" />
+        <element ref-id="embedded_variable_name" />
+    </element-def>
+
+    <element-def description="Unknown identifier" id="custom_undefined">
+        <token id="000000040" type-id="IDENTIFIER" />
+    </element-def>
+</element-defs>

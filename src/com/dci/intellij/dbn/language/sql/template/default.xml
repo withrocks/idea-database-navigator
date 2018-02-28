@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templateSet group="SQL (DBN)">
+    <template name="sel" description="Select from dataset" value="select $COLUMN$ from $TABLE$ where $END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMN" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="sel:a" description="Select all from dataset" value="select * from $TABLE$ where $END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="sel:c" description="Select count from dataset" value="select count(*) from $TABLE$ $ALIAS$ where $ALIAS$.$END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="ALIAS" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ins:v" description="INSERT INTO dataset VALUES" value="insert into $TABLE$ ($COLUMNS$) values ($END$);" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ins:s" description="INSERT INTO dataset SELECT" value="insert into $TABLE$ ($COLUMNS1$) select $COLUMNS2$ from $TABLE$ where ($END$);" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS1" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS1" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="del" description="DELETE dataset WHERE" value="delete $TABLE$ where $END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="decl" description="Declare block" value="declare&#10;begin&#10;    $END$&#10;end;&#10;/" toReformat="true">
+        <context>
+            <option name="SQL" value="true"/>
+        </context>
+    </template>
+</templateSet>

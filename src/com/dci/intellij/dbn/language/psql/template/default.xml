@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templateSet group="PL/SQL (DBN)">
+    <template name="sel:i" description="SELECT INTO variable FROM dataset" value="select $COLUMNS$ into $VARIABLE$ from $TABLE$ where $END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="VARIABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="del" description="DELETE dataset WHERE" value="delete $TABLE$ where $END$;" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ins:v" description="INSERT INTO dataset VALUES" value="insert into $TABLE$ ($COLUMNS$) values ($END$);" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ins:s" description="INSERT INTO dataset SELECT" value="insert into $TABLE$ ($COLUMNS1$) select $COLUMNS2$ from $TABLE$ where ($END$);" toReformat="true">
+        <variable name="TABLE" expression="complete()" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS1" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="COLUMNS2" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+
+    <template name="for:l" description="FOR LOOP" value="for $RECORDS$ in ($CURSOR$) &#10;loop&#10;    $END$&#10;end loop;" toReformat="true">
+        <variable name="RECORDS" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="CURSOR" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+
+
+
+    <template name="bege" description="BEGIN END block" value="begin&#10;    $END$&#10;end;&#10;" toReformat="false">
+        <context>
+            <option name="PL/SQL" value="true"/>
+        </context>
+    </template>
+</templateSet>

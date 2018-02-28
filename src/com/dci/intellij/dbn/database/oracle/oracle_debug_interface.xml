@@ -1,0 +1,481 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                timeout CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        ]>
+<data-dictionary>
+    <statement-execution-processor id="initialize-session-debugging" timeout="20">
+        <statement>
+            alter session set PLSQL_DEBUG = true
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="initialize-session-compiler-flags" timeout="20">
+        <statement>
+            alter  session set PLSQL_COMPILER_FLAGS = 'DEBUG'
+            <!--alter  session set PLSQL_COMPILER_FLAGS = 'INTERPRETED','DEBUG'-->
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="initialize-session" timeout="20">
+        <statement>
+            declare
+                v_session_id VARCHAR2(100);
+            begin
+                v_session_id := SYS.DBMS_DEBUG.initialize(
+                                        null,
+                                        SYS.DBMS_DEBUG.diagnostic_level,
+                                        null,
+                                        null);
+                ? := v_session_id;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="attach-session">
+        <statement>
+            declare
+            begin
+                SYS.DBMS_DEBUG.attach_session('{0}', SYS.DBMS_DEBUG.diagnostic_level);
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="detach-session">
+        <statement>
+            declare
+            begin
+                SYS.DBMS_DEBUG.detach_session();
+            end;
+        </statement>
+    </statement-execution-processor>    
+    <statement-execution-processor id="enable-debugging">
+        <statement>
+            declare
+            begin
+                SYS.DBMS_DEBUG.debug_on(true, false);
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="disable-debugging">
+        <statement>
+            declare
+            begin
+                SYS.DBMS_DEBUG.debug_off();
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="synchronize-session" timeout="20">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.synchronize(
+                                v_runtime_info,
+                                0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                    SYS.DBMS_DEBUG.info_getbreakpoint +
+                                    SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="step-over">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.continue(
+                                    v_runtime_info,
+                                    SYS.DBMS_DEBUG.break_next_line,
+                                    0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                        SYS.DBMS_DEBUG.info_getbreakpoint +
+                                        SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="step-into">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.continue(
+                                    v_runtime_info,
+                                    SYS.DBMS_DEBUG.break_any_call,
+                                    0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                        SYS.DBMS_DEBUG.info_getbreakpoint +
+                                        SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="step-out">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.continue(
+                                    v_runtime_info,
+                                    SYS.DBMS_DEBUG.break_any_return,
+                                    0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                        SYS.DBMS_DEBUG.info_getbreakpoint +
+                                        SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="resume-execution">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.continue(
+                                    v_runtime_info,
+                                    SYS.DBMS_DEBUG.break_any_return,
+                                    0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                        SYS.DBMS_DEBUG.info_getbreakpoint +
+                                        SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="add-breakpoint">
+        <statement>
+            declare
+                v_program_info SYS.DBMS_DEBUG.program_info;
+                v_program_type VARCHAR(10);
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+
+                v_program_type := '{2}';
+
+                v_program_info.namespace :=
+                    case v_program_type
+                        when 'FUNCTION' then SYS.DBMS_DEBUG.namespace_pkgspec_or_toplevel
+                        when 'PROCEDURE' then SYS.DBMS_DEBUG.namespace_pkgspec_or_toplevel
+                        when 'PACKAGE' then SYS.DBMS_DEBUG.namespace_pkg_body
+                        when 'TRIGGER' then SYS.DBMS_DEBUG.namespace_trigger
+                        else SYS.DBMS_DEBUG.namespace_none
+                    end;
+
+                v_program_info.owner := '{0}';
+                v_program_info.name := '{1}';
+                v_program_info.line# := {3};
+
+                v_result := SYS.DBMS_DEBUG.set_breakpoint(
+                                v_program_info,
+                                {3},
+                                ?,
+                                null,
+                                null);
+
+                v_message :=
+                    case v_result
+                        when dbms_debug.success then null
+                        when SYS.DBMS_DEBUG.error_illegal_line then 'No executable code at line '||{3}||'.'
+                        when SYS.DBMS_DEBUG.error_bad_handle then 'No such program unit.'
+                        else 'Could not register breakpoint. Unknown reason.'
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="remove-breakpoint">
+        <statement>
+            declare
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.delete_breakpoint({0});
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_no_such_breakpt then 'Breakpoint does not exist.'
+                        when SYS.DBMS_DEBUG.error_idle_breakpt then 'Breakpoint was already deleted.'
+                        when SYS.DBMS_DEBUG.error_stale_breakpt then 'Breakpoint is obsolete (program unit was changed)'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="enable-breakpoint">
+        <statement>
+            declare
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.enable_breakpoint({0});
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_no_such_breakpt then 'Breakpoint does not exist.'
+                        when SYS.DBMS_DEBUG.error_idle_breakpt then 'Breakpoint was already deleted.'
+                        when SYS.DBMS_DEBUG.error_stale_breakpt then 'Breakpoint is obsolete (program unit was changed)'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disable-breakpoint">
+        <statement>
+            declare
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.disable_breakpoint({0});
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_no_such_breakpt then 'Breakpoint does not exist.'
+                        when SYS.DBMS_DEBUG.error_idle_breakpt then 'Breakpoint was already deleted.'
+                        when SYS.DBMS_DEBUG.error_stale_breakpt then 'Breakpoint is obsolete (program unit was changed)'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="stop-execution">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.continue(
+                                    v_runtime_info,
+                                    SYS.DBMS_DEBUG.abort_execution,
+                                    0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                        SYS.DBMS_DEBUG.info_getbreakpoint +
+                                        SYS.DBMS_DEBUG.info_getlineinfo + 0);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="get-runtime-info">
+        <statement>
+            declare
+                v_runtime_info SYS.DBMS_DEBUG.runtime_info;
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_result := SYS.DBMS_DEBUG.get_runtime_info(
+                                0 + SYS.DBMS_DEBUG.info_getstackdepth +
+                                    SYS.DBMS_DEBUG.info_getbreakpoint +
+                                    SYS.DBMS_DEBUG.info_getlineinfo + 0,
+                                v_runtime_info);
+
+                ? := v_runtime_info.program.owner;
+                ? := v_runtime_info.program.name;
+                ? := v_runtime_info.program.namespace;
+                ? := v_runtime_info.line#;
+                ? := v_runtime_info.terminated;
+                ? := v_runtime_info.breakpoint;
+                ? := v_runtime_info.reason;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_timeout then 'Timeout while waiting for target session.'
+                        when SYS.DBMS_DEBUG.error_communication then 'Communication error.'
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="get-execution-backtrace">
+        <statement>
+            declare
+                v_listing varchar2(1000);
+            begin
+                SYS.DBMS_DEBUG.print_backtrace(v_listing);
+                ? := v_listing;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="get-execution-backtrace-table">
+        <statement>
+            declare
+                v_execution_stack SYS.DBMS_DEBUG.backtrace_table;
+                v_program_info SYS.DBMS_DEBUG.program_info;
+                v_listing varchar2(1000);
+            begin
+                SYS.DBMS_DEBUG.print_backtrace(v_execution_stack);
+                for i in v_execution_stack.first .. v_execution_stack.last loop
+                    v_program_info := v_execution_stack(i);
+                    v_listing := v_listing||v_program_info.owner||'.'||v_program_info.name||' '||v_program_info.line#||' '||v_program_info.namespace||chr(13);
+                end loop;
+
+                ? := v_listing;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="get-execution-status-info">
+        <statement>
+            declare
+                v_running boolean;
+                v_result BINARY_INTEGER;
+            begin
+                v_running := SYS.DBMS_DEBUG.target_program_running();
+                ? := case when v_running then 1 else 0 end;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="get-variable">
+        <statement>
+            declare
+                v_result BINARY_INTEGER;
+                v_scalar_value VARCHAR2(4000);
+                v_message VARCHAR2(100);
+                v_frame BINARY_INTEGER;
+            begin
+                v_frame := {1};
+                v_result := SYS.DBMS_DEBUG.get_value('{0}', v_frame, v_scalar_value, null);
+            
+                ? := v_scalar_value;
+
+                v_message :=
+                    case v_result
+                        when SYS.DBMS_DEBUG.error_bogus_frame then 'Invalid frame number '||'{1}'
+                        when SYS.DBMS_DEBUG.error_no_debug_info then 'No debug information available'
+                        when SYS.DBMS_DEBUG.error_no_such_object then 'Could not resolve variable'
+                        when SYS.DBMS_DEBUG.error_unknown_type then 'Unknown or illegible data type'
+                        /*when SYS.DBMS_DEBUG.error_nullvalue then 'Value is null'*/
+                        else null
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="set-variable-value">
+        <statement>
+            declare
+                v_assignment_statement varchar(1000);
+                v_result BINARY_INTEGER;
+                v_message VARCHAR2(100);
+            begin
+                v_assignment_statement := '{1} := ''{2}'';';
+
+                v_result := SYS.DBMS_DEBUG.set_value({0}, v_assignment_statement);
+
+                v_message :=
+                    case v_result
+                        when dbms_debug.success then null
+                        when SYS.DBMS_DEBUG.error_illegal_value then 'Constraint violation.'
+                        when SYS.DBMS_DEBUG.error_illegal_null then 'Null not allowed'
+                        when SYS.DBMS_DEBUG.error_value_malformed then 'Value is not a scalar'
+                        when SYS.DBMS_DEBUG.error_name_incomplete then 'The assignment statement does not resolve to a scalar'
+                        else 'Operation not allowed.'
+                    end;
+                ? := v_message;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+</data-dictionary>

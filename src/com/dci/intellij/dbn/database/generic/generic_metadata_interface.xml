@@ -1,0 +1,11 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                is-query CDATA #IMPLIED
+                timeout CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        ]>
+<data-dictionary>
+</data-dictionary>

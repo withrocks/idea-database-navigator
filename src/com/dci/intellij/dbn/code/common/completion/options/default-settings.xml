@@ -1,0 +1,173 @@
+<!DOCTYPE code-completion [
+        <!ELEMENT code-completion (sorting|filters)*>
+        <!ELEMENT sorting (sorting-element)*>
+        <!ELEMENT sorting-element (#PCDATA)>
+        <!ATTLIST sorting-element
+                id CDATA #REQUIRED
+                type CDATA #REQUIRED>
+        <!ELEMENT filters (basic-filter|extended-filter)*>
+        <!ELEMENT basic-filter (filter-element|user-schema|public-schema|any-schema)*>
+        <!ELEMENT filter-element (#PCDATA)>
+        <!ATTLIST filter-element
+                id CDATA #REQUIRED
+                selected CDATA #REQUIRED
+                type CDATA #REQUIRED>
+        <!ELEMENT user-schema (filter-element)*>
+        <!ELEMENT public-schema (filter-element)*>
+        <!ELEMENT any-schema (filter-element)*>
+        <!ELEMENT extended-filter (filter-element|user-schema|public-schema|any-schema)*>
+        ]>
+<code-completion>
+    <sorting>
+        <sorting-element type="RESERVED_WORD" id="keyword"/>
+        <sorting-element type="RESERVED_WORD" id="datatype"/>
+        <sorting-element type="OBJECT" id="COLUMN"/>
+        <sorting-element type="OBJECT" id="TABLE"/>
+        <sorting-element type="OBJECT" id="VIEW"/>
+        <sorting-element type="OBJECT" id="MATERIALIZED_VIEW"/>
+        <sorting-element type="OBJECT" id="INDEX"/>
+        <sorting-element type="OBJECT" id="CONSTRAINT"/>
+        <sorting-element type="OBJECT" id="TRIGGER"/>
+        <sorting-element type="OBJECT" id="SYNONYM"/>
+        <sorting-element type="OBJECT" id="SEQUENCE"/>
+        <sorting-element type="OBJECT" id="PROCEDURE"/>
+        <sorting-element type="OBJECT" id="FUNCTION"/>
+        <sorting-element type="OBJECT" id="PACKAGE"/>
+        <sorting-element type="OBJECT" id="TYPE"/>
+        <sorting-element type="OBJECT" id="DIMENSION"/>
+        <sorting-element type="OBJECT" id="CLUSTER"/>
+        <sorting-element type="OBJECT" id="DBLINK"/>
+        <sorting-element type="OBJECT" id="SCHEMA"/>
+        <sorting-element type="OBJECT" id="ROLE"/>
+        <sorting-element type="OBJECT" id="USER"/>
+        <sorting-element type="RESERVED_WORD" id="function"/>
+        <sorting-element type="RESERVED_WORD" id="parameter"/>
+    </sorting>
+    <filters>
+        <basic-filter>
+            <filter-element type="RESERVED_WORD" id="keyword" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="function" selected="false"/>
+            <filter-element type="RESERVED_WORD" id="parameter" selected="false"/>
+            <filter-element type="RESERVED_WORD" id="datatype" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="exception" selected="true"/>
+            <filter-element type="OBJECT" id="SCHEMA" selected="true"/>
+            <filter-element type="OBJECT" id="ROLE" selected="true"/>
+            <filter-element type="OBJECT" id="USER" selected="true"/>
+            <filter-element type="OBJECT" id="PRIVILEGE" selected="true"/>
+            <user-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="true"/>
+                <filter-element type="OBJECT" id="VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="INDEX" selected="true"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="true"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="true"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="false"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="true"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="true"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="true"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="true"/>
+                <filter-element type="OBJECT" id="TYPE" selected="true"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="true"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="true"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="true"/>
+            </user-schema>
+            <public-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="false"/>
+                <filter-element type="OBJECT" id="VIEW" selected="false"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="false"/>
+                <filter-element type="OBJECT" id="INDEX" selected="false"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="false"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="false"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="false"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="false"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="false"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="false"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="false"/>
+                <filter-element type="OBJECT" id="TYPE" selected="false"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="false"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="false"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="false"/>
+            </public-schema>
+            <any-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="true"/>
+                <filter-element type="OBJECT" id="VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="INDEX" selected="true"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="true"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="true"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="true"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="true"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="true"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="true"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="true"/>
+                <filter-element type="OBJECT" id="TYPE" selected="true"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="true"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="true"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="true"/>
+            </any-schema>
+        </basic-filter>
+        <extended-filter>
+            <filter-element type="RESERVED_WORD" id="keyword" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="function" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="parameter" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="datatype" selected="true"/>
+            <filter-element type="RESERVED_WORD" id="exception" selected="true"/>
+            <filter-element type="OBJECT" id="SCHEMA" selected="true"/>
+            <filter-element type="OBJECT" id="USER" selected="true"/>
+            <filter-element type="OBJECT" id="ROLE" selected="true"/>
+            <filter-element type="OBJECT" id="PRIVILEGE" selected="true"/>
+            <user-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="true"/>
+                <filter-element type="OBJECT" id="VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="INDEX" selected="true"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="true"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="true"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="true"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="true"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="true"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="true"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="true"/>
+                <filter-element type="OBJECT" id="TYPE" selected="true"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="true"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="true"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="true"/>
+            </user-schema>
+            <public-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="true"/>
+                <filter-element type="OBJECT" id="VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="INDEX" selected="true"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="true"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="true"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="true"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="true"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="true"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="true"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="true"/>
+                <filter-element type="OBJECT" id="TYPE" selected="true"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="true"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="true"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="true"/>
+            </public-schema>
+            <any-schema>
+                <filter-element type="OBJECT" id="TABLE" selected="true"/>
+                <filter-element type="OBJECT" id="VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="MATERIALIZED_VIEW" selected="true"/>
+                <filter-element type="OBJECT" id="INDEX" selected="true"/>
+                <filter-element type="OBJECT" id="CONSTRAINT" selected="true"/>
+                <filter-element type="OBJECT" id="TRIGGER" selected="true"/>
+                <filter-element type="OBJECT" id="SYNONYM" selected="true"/>
+                <filter-element type="OBJECT" id="SEQUENCE" selected="true"/>
+                <filter-element type="OBJECT" id="PROCEDURE" selected="true"/>
+                <filter-element type="OBJECT" id="FUNCTION" selected="true"/>
+                <filter-element type="OBJECT" id="PACKAGE" selected="true"/>
+                <filter-element type="OBJECT" id="TYPE" selected="true"/>
+                <filter-element type="OBJECT" id="DIMENSION" selected="true"/>
+                <filter-element type="OBJECT" id="CLUSTER" selected="true"/>
+                <filter-element type="OBJECT" id="DBLINK" selected="true"/>
+            </any-schema>
+        </extended-filter>
+    </filters>
+
+</code-completion>

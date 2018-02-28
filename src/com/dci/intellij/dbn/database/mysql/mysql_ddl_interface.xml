@@ -1,0 +1,39 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                is-query CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        <!ATTLIST statement
+                comment CDATA #IMPLIED
+                variants CDATA #IMPLIED>
+        ]>
+<data-dictionary>
+    <statement-execution-processor id="create-view">
+        <statement>create view {0} as {1}</statement>
+    </statement-execution-processor>
+
+
+
+
+    <statement-execution-processor id="create-object">
+        <statement>create {0}</statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="drop-object">
+        <statement>drop {0} {1}</statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="drop-object-if-exists">
+        <statement>drop {0} if exists {1}</statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="get-session-sql-mode" is-query="true">
+        <statement>SELECT @@session.sql_mode</statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="set-session-sql-mode">
+        <statement>SET sql_mode='{0}'</statement>
+    </statement-execution-processor>
+</data-dictionary>

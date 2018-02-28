@@ -1,0 +1,811 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                is-query CDATA #IMPLIED
+                is-prepared-statement CDATA #IMPLIED
+                timeout CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        ]>
+<data-dictionary>
+    <statement-execution-processor id="schemas" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                SCHEMA_NAME,
+                case when lower(SCHEMA_NAME)='pg_catalog' then 'Y' else 'N' end as IS_PUBLIC,
+                case when lower(SCHEMA_NAME)='information_schema' then 'Y' else 'N' end as IS_SYSTEM,
+                'N' as IS_EMPTY
+            from INFORMATION_SCHEMA.SCHEMATA
+            order by SCHEMA_NAME asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="users" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                GRANTEE as USER_NAME,
+                'N' as IS_EXPIRED,
+                'N' as IS_LOCKED
+            from INFORMATION_SCHEMA.USAGE_PRIVILEGES
+            order by GRANTEE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="system-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct PRIVILEGE_TYPE as PRIVILEGE_NAME
+            from INFORMATION_SCHEMA.USAGE_PRIVILEGES
+            order by PRIVILEGE_TYPE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-user-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                GRANTEE as USER_NAME,
+                PRIVILEGE_TYPE as GRANTED_PRIVILEGE_NAME,
+                IS_GRANTABLE as IS_ADMIN_OPTION
+            from INFORMATION_SCHEMA.USAGE_PRIVILEGES
+            order by GRANTEE, PRIVILEGE_TYPE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="charsets" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                CHARACTER_SET_NAME as CHARSET_NAME,
+                -1 as MAX_LENGTH
+            from INFORMATION_SCHEMA.CHARACTER_SETS
+            order by CHARACTER_SET_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="tables" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME,
+                'N' as IS_TEMPORARY
+            from  INFORMATION_SCHEMA.TABLES
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_TYPE = 'BASE TABLE'
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="views" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME as VIEW_NAME,
+                null as VIEW_TYPE_OWNER,
+                null as VIEW_TYPE,
+                case when TABLE_TYPE = 'VIEW' then 'N' else 'Y' end as IS_SYSTEM_VIEW
+            from INFORMATION_SCHEMA.TABLES
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_TYPE in ('VIEW', 'SYSTEM VIEW')
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-columns" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                col.COLUMN_NAME,
+                col.ORDINAL_POSITION as "POSITION",
+                replace(col.DATA_TYPE, '"', '') as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                case when pk.COLUMN_NAME is null then 'N' else 'Y' end as IS_PRIMARY_KEY,
+                case when fk.COLUMN_NAME is null then 'N' else 'Y' end as IS_FOREIGN_KEY,
+                'N' as IS_UNIQUE_KEY
+            from INFORMATION_SCHEMA.COLUMNS col
+                    left join (select
+                                   kcu.TABLE_SCHEMA,
+                                   kcu.COLUMN_NAME,
+                                   kcu.TABLE_NAME
+                               from
+                                   INFORMATION_SCHEMA.table_constraints tc,
+                                   INFORMATION_SCHEMA.key_column_usage kcu
+                               where
+                                   tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA and
+                                   tc.TABLE_NAME = kcu.TABLE_NAME and
+                                   tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                                   tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME and
+                                   tc.constraint_type = 'PRIMARY KEY') pk
+                    using (TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME)
+                    left join (select
+                                   kcu.TABLE_SCHEMA,
+                                   kcu.COLUMN_NAME,
+                                   kcu.TABLE_NAME
+                               from
+                                   INFORMATION_SCHEMA.table_constraints tc,
+                                   INFORMATION_SCHEMA.key_column_usage kcu
+                               where
+                                   tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA and
+                                   tc.TABLE_NAME = kcu.TABLE_NAME and
+                                   tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                                   tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME and
+                                   tc.constraint_type = 'FOREIGN KEY') fk
+                    using (TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME)
+            where
+                col.TABLE_SCHEMA = {0} and
+                col.TABLE_NAME = {1}
+            order by col.COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-columns" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                col.COLUMN_NAME,
+                col.TABLE_NAME as DATASET_NAME,
+                col.ORDINAL_POSITION as "POSITION",
+                replace(col.DATA_TYPE, '"', '') as DATA_TYPE_NAME,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                col.CHARACTER_MAXIMUM_LENGTH as DATA_LENGTH,
+                col.NUMERIC_PRECISION as DATA_PRECISION,
+                col.NUMERIC_SCALE as DATA_SCALE,
+                'N' as IS_SET,
+                left(col.IS_NULLABLE, 1) as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                case when pk.COLUMN_NAME is null then 'N' else 'Y' end as IS_PRIMARY_KEY,
+                case when fk.COLUMN_NAME is null then 'N' else 'Y' end as IS_FOREIGN_KEY,
+                'N' as IS_UNIQUE_KEY
+            from INFORMATION_SCHEMA.COLUMNS col
+                    left join (select
+                                   kcu.TABLE_SCHEMA,
+                                   kcu.COLUMN_NAME,
+                                   kcu.TABLE_NAME
+                               from
+                                   INFORMATION_SCHEMA.table_constraints tc,
+                                   INFORMATION_SCHEMA.key_column_usage kcu
+                               where
+                                   tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA and
+                                   tc.TABLE_NAME = kcu.TABLE_NAME and
+                                   tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                                   tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME and
+                                   tc.constraint_type = 'PRIMARY KEY') pk
+                    using (TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME)
+                    left join (select
+                                   kcu.TABLE_SCHEMA,
+                                   kcu.COLUMN_NAME,
+                                   kcu.TABLE_NAME
+                               from
+                                   INFORMATION_SCHEMA.table_constraints tc,
+                                   INFORMATION_SCHEMA.key_column_usage kcu
+                               where
+                                   tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA and
+                                   tc.TABLE_NAME = kcu.TABLE_NAME and
+                                   tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA and
+                                   tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME and
+                                   tc.constraint_type = 'FOREIGN KEY') fk
+                    using (TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME)
+            where
+                col.TABLE_SCHEMA = {0}
+            order by
+                col.TABLE_NAME,
+                col.COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-constraints" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                tc.CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                rc.UNIQUE_CONSTRAINT_SCHEMA as FK_CONSTRAINT_OWNER,
+                rc.UNIQUE_CONSTRAINT_NAME as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                check_clause as CHECK_CONDITION
+            from
+                INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc left join
+                INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc using (CONSTRAINT_SCHEMA, CONSTRAINT_NAME) left join
+                INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc using (CONSTRAINT_SCHEMA, CONSTRAINT_NAME)
+            where
+                tc.TABLE_SCHEMA = {0}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="constraints" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                tc.TABLE_NAME as DATASET_NAME,
+                tc.CONSTRAINT_NAME,
+                tc.CONSTRAINT_TYPE,
+                rc.UNIQUE_CONSTRAINT_SCHEMA as FK_CONSTRAINT_OWNER,
+                rc.UNIQUE_CONSTRAINT_NAME as FK_CONSTRAINT_NAME,
+                'Y' as IS_ENABLED,
+                check_clause as CHECK_CONDITION
+            from
+                INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc left join
+                INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc using (CONSTRAINT_SCHEMA, CONSTRAINT_NAME) left join
+                INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc using (CONSTRAINT_SCHEMA, CONSTRAINT_NAME)
+            where
+                tc.TABLE_SCHEMA = {0} and
+                tc.TABLE_NAME = {1}
+            order by
+                tc.TABLE_NAME,
+                tc.CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                COLUMN_NAME,
+                CONSTRAINT_NAME,
+                ORDINAL_POSITION as POSITION
+            from INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME as DATASET_NAME,
+                COLUMN_NAME,
+                CONSTRAINT_NAME,
+                ORDINAL_POSITION as POSITION
+            from INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            where TABLE_SCHEMA = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="indexes" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                indexname as INDEX_NAME,
+                case when position('UNIQUE' in indexdef) > 1 then 'Y' else 'N' end as IS_UNIQUE,
+                'Y' as IS_VALID
+            from pg_catalog.pg_indexes
+            where
+                schemaname = {0} and
+                tablename = {1}
+            order by indexname asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-indexes" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                indexname as INDEX_NAME,
+                tablename as TABLE_NAME,
+                case when position('UNIQUE' in indexdef) > 1 then 'Y' else 'N' end as IS_UNIQUE,
+                'Y' as IS_VALID
+            from pg_catalog.pg_indexes
+            where schemaname = {0}
+            order by
+                tablename,
+                indexname asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                COLUMN_NAME,
+                INDEX_NAME
+            from INFORMATION_SCHEMA.STATISTICS
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                TABLE_NAME,
+                COLUMN_NAME,
+                INDEX_NAME
+            from INFORMATION_SCHEMA.STATISTICS
+            where TABLE_SCHEMA = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="sequences" is-query="true" is-prepared-statement="true">
+        <statement>
+            select SEQUENCE_NAME
+            from INFORMATION_SCHEMA.SEQUENCES
+            where SEQUENCE_SCHEMA = {0}
+            order by SEQUENCE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                EVENT_OBJECT_TABLE as DATASET_NAME,
+                TRIGGER_NAME as TRIGGER_NAME,
+                ACTION_TIMING as TRIGGER_TYPE,
+                string_agg(EVENT_MANIPULATION, ' or ') as TRIGGERING_EVENT,
+                'Y' as IS_ENABLED,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_FOR_EACH_ROW
+            from INFORMATION_SCHEMA.TRIGGERS
+            where
+                EVENT_OBJECT_SCHEMA = {0} and
+                EVENT_OBJECT_TABLE = {1}
+            group by
+                EVENT_OBJECT_TABLE,
+                TRIGGER_NAME,
+                ACTION_TIMING
+            order by TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct
+                EVENT_OBJECT_TABLE as DATASET_NAME,
+                TRIGGER_NAME as TRIGGER_NAME,
+                ACTION_TIMING as TRIGGER_TYPE,
+                string_agg(EVENT_MANIPULATION, ' or ') as TRIGGERING_EVENT,
+                'Y' as IS_ENABLED,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_FOR_EACH_ROW
+            from INFORMATION_SCHEMA.TRIGGERS
+            where EVENT_OBJECT_SCHEMA = {0}
+            group by
+                EVENT_OBJECT_TABLE,
+                TRIGGER_NAME,
+                ACTION_TIMING
+            order by
+                EVENT_OBJECT_TABLE,
+                TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="functions" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                r1.ROUTINE_NAME as FUNCTION_NAME,
+                case when r5.COUNT > 1 then
+                    (select r3.OVERLOAD
+                     from (select
+                                ROW_NUMBER() over (order by r2.SPECIFIC_NAME) as overload,
+                                r2.ROUTINE_SCHEMA,
+                                r2.SPECIFIC_NAME
+                            from INFORMATION_SCHEMA.ROUTINES r2
+                            where
+                                r2.ROUTINE_SCHEMA = {0} and
+                                r2.ROUTINE_NAME = r1.ROUTINE_NAME) as r3
+                     where
+                        r3.ROUTINE_SCHEMA = {0} and
+                        r3.SPECIFIC_NAME = r1.SPECIFIC_NAME)
+                else 0 end as OVERLOAD,
+                0 as POSITION,
+                'Y' as IS_VALID,
+                'N' as IS_DEBUG,
+                left(IS_DETERMINISTIC, 1) as IS_DETERMINISTIC,
+                case when  r1.EXTERNAL_LANGUAGE = 'PLPGSQL' then 'PSQL' else 'SQL' end as LANGUAGE
+            from
+                INFORMATION_SCHEMA.ROUTINES r1,
+                (select distinct
+                    r4.ROUTINE_SCHEMA,
+                    r4.ROUTINE_NAME,
+                    count(*) over(partition by r4.ROUTINE_NAME)
+                from INFORMATION_SCHEMA.ROUTINES r4
+                where r4.ROUTINE_SCHEMA = {0}) r5
+            where
+                r5.ROUTINE_NAME = r1.ROUTINE_NAME and
+                r1.ROUTINE_SCHEMA = {0}
+            order by r1.ROUTINE_NAME, OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            with r as
+                (select
+                    r1.SPECIFIC_SCHEMA,
+                    r1.SPECIFIC_NAME,
+                    r1.ROUTINE_NAME,
+                    r1.ROUTINE_TYPE,
+                    r1.DATA_TYPE,
+                    CASE WHEN r5.count > 1 THEN
+                        (select r3.overload
+                         from (select
+                                   ROW_NUMBER() over (order by r2.SPECIFIC_NAME) as overload,
+                                   r2.SPECIFIC_SCHEMA,
+                                   r2.SPECIFIC_NAME
+                               from INFORMATION_SCHEMA.ROUTINES r2
+                               where
+                                   r2.SPECIFIC_SCHEMA = {0} and
+                                   r2.ROUTINE_NAME = {1}) as r3
+                         where
+                            r3.SPECIFIC_NAME = r1.SPECIFIC_NAME)
+                    ELSE 0 END as OVERLOAD
+                from
+                    INFORMATION_SCHEMA.ROUTINES r1,
+                    (select distinct
+                        r4.SPECIFIC_SCHEMA,
+                        r4.ROUTINE_NAME,
+                        count(*) over(partition by r4.ROUTINE_NAME)
+                     from INFORMATION_SCHEMA.ROUTINES r4
+                     where
+                        r4.SPECIFIC_SCHEMA = {0} and
+                        r4.ROUTINE_NAME = {1}) r5
+                where
+                    r1.SPECIFIC_SCHEMA = {0} and
+                    r1.ROUTINE_NAME = {1})
+            select
+                'return' as ARGUMENT_NAME,
+                null as PROGRAM_NAME,
+                r.ROUTINE_NAME as METHOD_NAME,
+                'FUNCTION' as METHOD_TYPE,
+                r.DATA_TYPE as DATA_TYPE_NAME,
+                r.OVERLOAD,
+                0 as POSITION,
+                0 as SEQUENCE,
+                'OUT' as IN_OUT,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                0 as DATA_LENGTH,
+                0 as DATA_PRECISION,
+                0 as DATA_SCALE,
+                case when prc.PRORETSET then 'Y' else 'N' end as IS_SET
+            from r,
+                pg_catalog.pg_proc prc,
+                pg_catalog.pg_namespace schm
+            where
+                r.OVERLOAD = {3} and
+                r.SPECIFIC_SCHEMA = schm.NSPNAME and
+                prc.PRONAME||'_'||prc.OID = r.SPECIFIC_NAME and
+                prc.PRONAMESPACE = schm.OID
+            union
+            (select
+                case when p.PARAMETER_NAME is null then 'param'||p.ORDINAL_POSITION else p.PARAMETER_NAME end as ARGUMENT_NAME,
+                null as PROGRAM_NAME,
+                r.ROUTINE_NAME as METHOD_NAME,
+                'FUNCTION' as METHOD_TYPE,
+                p.DATA_TYPE as DATA_TYPE_NAME,
+                r.OVERLOAD,
+                p.ORDINAL_POSITION as POSITION,
+                p.ORDINAL_POSITION as SEQUENCE,
+                p.PARAMETER_MODE as IN_OUT,
+                null as DATA_TYPE_OWNER,
+                null as DATA_TYPE_PACKAGE,
+                0 as DATA_LENGTH,
+                0 as DATA_PRECISION,
+                0 as DATA_SCALE,
+                'N' as IS_SET
+            from
+                INFORMATION_SCHEMA.PARAMETERS p, r
+            where
+                r.SPECIFIC_SCHEMA = {0} and
+                r.ROUTINE_NAME = {1} and
+                r.OVERLOAD = {3} and
+                p.SPECIFIC_SCHEMA = r.SPECIFIC_SCHEMA and
+                p.SPECIFIC_NAME = r.SPECIFIC_NAME
+            order by
+                p.ORDINAL_POSITION)
+        </statement>
+    </statement-execution-processor>
+
+
+    <statement-execution-processor id="all-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement>
+            select prm.* from (
+                with r as (
+                    select
+                        r1.SPECIFIC_SCHEMA,
+                        r1.SPECIFIC_NAME,
+                        r1.ROUTINE_NAME,
+                        r1.ROUTINE_TYPE,
+                        r1.DATA_TYPE,
+                        CASE WHEN r5.count > 1 THEN
+                            (select r3.overload
+                             from (select
+                                       ROW_NUMBER() over (order by r2.SPECIFIC_NAME) as overload,
+                                       r2.SPECIFIC_SCHEMA,
+                                       r2.SPECIFIC_NAME
+                                   from INFORMATION_SCHEMA.ROUTINES r2
+                                   where r2.SPECIFIC_SCHEMA = {0} and r2.ROUTINE_NAME = r1.ROUTINE_NAME) as r3
+                             where r3.SPECIFIC_SCHEMA = {0} and r3.SPECIFIC_NAME = r1.SPECIFIC_NAME)
+                        ELSE 0 END as OVERLOAD
+                    from
+                        INFORMATION_SCHEMA.ROUTINES r1,
+                        (select distinct
+                            r4.SPECIFIC_SCHEMA,
+                            r4.ROUTINE_NAME,
+                            count(*) over(partition by r4.ROUTINE_NAME)
+                         from INFORMATION_SCHEMA.ROUTINES r4
+                         where
+                            r4.SPECIFIC_SCHEMA = {0}) r5
+                    where
+                        r1.SPECIFIC_SCHEMA = {0} and
+                        r5.SPECIFIC_SCHEMA = r1.SPECIFIC_SCHEMA and
+                        r5.ROUTINE_NAME = r1.ROUTINE_NAME)
+                select
+                    r.SPECIFIC_SCHEMA,
+                    r.SPECIFIC_NAME,
+                    'return' as ARGUMENT_NAME,
+                    null as PROGRAM_NAME,
+                    r.ROUTINE_NAME as METHOD_NAME,
+                    'FUNCTION' as METHOD_TYPE,
+                    r.DATA_TYPE as DATA_TYPE_NAME,
+                    r.OVERLOAD,
+                    0 as POSITION,
+                    0 as SEQUENCE,
+                    'OUT' as IN_OUT,
+                    null as DATA_TYPE_OWNER,
+                    null as DATA_TYPE_PACKAGE,
+                    0 as DATA_LENGTH,
+                    0 as DATA_PRECISION,
+                    0 as DATA_SCALE,
+                    case when prc.PRORETSET then 'Y' else 'N' end as IS_SET
+                from r,
+                    pg_catalog.pg_proc prc,
+                    pg_catalog.pg_namespace schm
+                where
+                    r.SPECIFIC_SCHEMA = schm.NSPNAME and
+                    prc.PRONAME||'_'||prc.OID = r.SPECIFIC_NAME and
+                    prc.PRONAMESPACE = schm.OID
+                union
+                (select
+                    r.SPECIFIC_SCHEMA,
+                    r.SPECIFIC_NAME,
+                    case when p.PARAMETER_NAME is null then 'param'||p.ORDINAL_POSITION else p.PARAMETER_NAME end as ARGUMENT_NAME,
+                    null as PROGRAM_NAME,
+                    r.ROUTINE_NAME as METHOD_NAME,
+                    'FUNCTION' as METHOD_TYPE,
+                    p.DATA_TYPE as DATA_TYPE_NAME,
+                    r.OVERLOAD,
+                    p.ORDINAL_POSITION as POSITION,
+                    p.ORDINAL_POSITION as SEQUENCE,
+                    p.PARAMETER_MODE as IN_OUT,
+                    null as DATA_TYPE_OWNER,
+                    null as DATA_TYPE_PACKAGE,
+                    0 as DATA_LENGTH,
+                    0 as DATA_PRECISION,
+                    0 as DATA_SCALE,
+                    'N' as IS_SET
+                from
+                    INFORMATION_SCHEMA.PARAMETERS p, r
+                where
+                    r.SPECIFIC_SCHEMA = {0} and
+                    p.SPECIFIC_SCHEMA = r.SPECIFIC_SCHEMA and
+                    p.SPECIFIC_NAME = r.SPECIFIC_NAME)) prm
+            order by
+                prm.SPECIFIC_SCHEMA,
+                prm.SPECIFIC_NAME,
+                prm.POSITION
+        </statement>
+    </statement-execution-processor>
+     <statement-execution-processor id="referenced-objects" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct * from (
+                select
+                    REFERENCED_OWNER as OBJECT_OWNER,
+                    REFERENCED_NAME as OBJECT_NAME,
+                    decode(REFERENCED_TYPE, 'PACKAGE BODY', 'PACKAGE', 'TYPE BODY', 'TYPE', REFERENCED_TYPE) as OBJECT_TYPE
+                from [PREFIX]_DEPENDENCIES
+                where
+                   (OWNER != REFERENCED_OWNER or NAME != REFERENCED_NAME) and
+                    OWNER = {0} and
+                    NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="referencing-objects" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct * from (
+                select
+                    OWNER as OBJECT_OWNER,
+                    NAME as OBJECT_NAME,
+                    decode(TYPE, 'PACKAGE BODY', 'PACKAGE', 'TYPE BODY', 'TYPE', TYPE) as OBJECT_TYPE
+                from [PREFIX]_DEPENDENCIES where
+                    (OWNER != REFERENCED_OWNER or NAME != REFERENCED_NAME) and
+                    REFERENCED_OWNER = {0} and
+                    REFERENCED_NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="view-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select VIEW_DEFINITION
+            from INFORMATION_SCHEMA.VIEWS
+            where
+                TABLE_SCHEMA = {0} and
+                TABLE_NAME = {1}
+        </statement>
+    </statement-execution-processor>    
+
+    <statement-execution-processor id="dataset-trigger-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select concat(
+                'trigger ',
+                TRIGGER_NAME,
+                E'$$DBN_GUARDED_BLOCK_END_OFFSET$$\n\r', lower(ACTION_TIMING), ' ',
+                string_agg(lower(EVENT_MANIPULATION), ' or '),
+                E'\n\r    on ',
+                EVENT_OBJECT_SCHEMA, '.', EVENT_OBJECT_TABLE,
+                E'\n\r for each row ',
+                E'\n\r', ACTION_STATEMENT)
+            from INFORMATION_SCHEMA.TRIGGERS
+            where
+                EVENT_OBJECT_SCHEMA = {0} and
+                EVENT_OBJECT_TABLE = {1} and
+                TRIGGER_SCHEMA = {2} and
+                TRIGGER_NAME = {3}
+            group by
+                TRIGGER_NAME,
+                ACTION_TIMING,
+                ACTION_STATEMENT,
+                EVENT_OBJECT_SCHEMA,
+                EVENT_OBJECT_TABLE
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-source-code" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                concat(
+                    lower(r.ROUTINE_TYPE), ' ',
+                    r.ROUTINE_NAME,
+                    '$$DBN_GUARDED_BLOCK_END_OFFSET$$(', (select array_to_string( array(
+                                select p.PARAMETER_MODE||' '||(case when p.PARAMETER_NAME is not null then p.PARAMETER_NAME||' ' else '' end)||p.DATA_TYPE from INFORMATION_SCHEMA.PARAMETERS p
+                                where
+                                    p.SPECIFIC_SCHEMA = r.SPECIFIC_SCHEMA and
+                                    p.SPECIFIC_NAME = r.SPECIFIC_NAME
+                                order by p.ORDINAL_POSITION), ', ' )),
+                    ')',
+                    case when {2}='FUNCTION' then E'\n\r\treturns '||
+                                (case when prc.PRORETSET then 'setof ' else '' end) ||
+                                (case when r.DATA_TYPE = 'USER-DEFINED' then r.TYPE_UDT_NAME else r.DATA_TYPE end) else '' end,
+                    ' as ',
+                    E'\n\$BODY$ ',
+                    r.ROUTINE_DEFINITION,
+                    '$BODY$ ',
+                    E'\n\rlanguage ', r.EXTERNAL_LANGUAGE,
+                    case when prc.PROVOLATILE = 'v' then ' volatile'
+                         when prc.PROVOLATILE = 'i' then ' immutable'
+                         when prc.PROVOLATILE = 's' then ' stable' else '' end,
+                    case when prc.PROISSTRICT then ' strict' else '' end,
+                    case when prc.PROSECDEF then ' security definer' else '' end,
+                    case when prc.PROCOST > 0 then E'\n\rcost '||prc.PROCOST end,
+                    case when prc.PROROWS > 0 then E'\n\rrows '||prc.PROROWS end,
+                        ';',
+                    E'\n\ralter function ', r.ROUTINE_NAME,
+                    '(', (select array_to_string( array(
+                                    select p.PARAMETER_MODE||' '||(case when p.PARAMETER_NAME is not null then p.PARAMETER_NAME||' ' else '' end)||p.DATA_TYPE from INFORMATION_SCHEMA.PARAMETERS p where
+                                        p.SPECIFIC_SCHEMA = r.SPECIFIC_SCHEMA and
+                                        p.SPECIFIC_NAME = r.SPECIFIC_NAME
+                                    order by p.ORDINAL_POSITION), ', ' )),
+                    ') owner to ', (select session_user), ';')
+            from
+                (select
+                    r1.SPECIFIC_SCHEMA,
+                    r1.SPECIFIC_NAME,
+                    r1.ROUTINE_SCHEMA,
+                    r1.ROUTINE_NAME,
+                    r1.ROUTINE_TYPE,
+                    r1.ROUTINE_DEFINITION,
+                    r1.EXTERNAL_LANGUAGE,
+                    r1.DATA_TYPE,
+                    r1.TYPE_UDT_NAME,
+                    CASE WHEN r5.count > 1 THEN
+                        (select r3.overload
+                         from (select
+                                   ROW_NUMBER() over (order by r2.SPECIFIC_NAME) as overload,
+                                   r2.SPECIFIC_SCHEMA,
+                                   r2.SPECIFIC_NAME
+                               from INFORMATION_SCHEMA.ROUTINES r2
+                               where
+                                   r2.SPECIFIC_SCHEMA = {0} and
+                                   r2.ROUTINE_NAME = {1}) as r3
+                         where
+                            r3.SPECIFIC_NAME = r1.SPECIFIC_NAME)
+                    ELSE 0 END as OVERLOAD
+                from
+                    INFORMATION_SCHEMA.ROUTINES r1,
+                    (select distinct
+                        r4.SPECIFIC_SCHEMA,
+                        r4.ROUTINE_NAME,
+                        count(*) over(partition by r4.ROUTINE_NAME)
+                     from INFORMATION_SCHEMA.ROUTINES r4
+                     where
+                        r4.SPECIFIC_SCHEMA = {0} and
+                        r4.ROUTINE_NAME = {1}) r5
+                where
+                    r1.SPECIFIC_SCHEMA = {0} and
+                    r1.ROUTINE_NAME = {1}) r,
+                pg_catalog.pg_proc prc,
+                pg_catalog.pg_namespace schm
+            where
+                r.SPECIFIC_SCHEMA = {0} and
+                r.ROUTINE_NAME = {1} and
+                r.ROUTINE_TYPE = {2} and
+                r.OVERLOAD = {3} and
+                r.ROUTINE_SCHEMA = schm.NSPNAME and
+                prc.PRONAME||'_'||prc.OID = r.SPECIFIC_NAME and
+                prc.PRONAMESPACE = schm.OID
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-change-timestamp" is-query="true" is-prepared-statement="true">
+        <statement>
+            select timestamp '2000-01-01 00:00' as MODIFIED
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="load-distinct-values" is-query="true">
+        <statement>
+            select distinct {2} from {0}.{1} where {2} is not null order by {2}
+        </statement>
+    </statement-execution-processor>    
+
+    <statement-execution-processor id="set-current-schema">
+        <statement>
+            set search_path to {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="validate-connection" timeout="5" is-prepared-statement="true">
+        <statement>
+            select 1
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="sessions" is-prepared-statement="true">
+        <statement>
+            select
+                pid "SESSION_ID",
+                usename "USER",
+                upper(state) "STATUS",
+                waiting "WAITING",
+                application_name "MODULE",
+                client_addr "IP_ADDRESS",
+                client_hostname "HOST",
+                client_port "PORT",
+                backend_start "SESSION_START",
+                query_start "QUERY_START",
+                state_change "STATE_CHANGE",
+                query "QUERY"
+            from
+            pg_stat_activity
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="session-sql" is-prepared-statement="true" timeout="10">
+        <statement>
+            select query as SQL_STATEMENT
+            from pg_stat_activity
+            where pid = {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="kill-session" is-prepared-statement="true">
+        <statement>
+            select pg_terminate_backend({0})
+        </statement>
+    </statement-execution-processor>
+
+</data-dictionary>

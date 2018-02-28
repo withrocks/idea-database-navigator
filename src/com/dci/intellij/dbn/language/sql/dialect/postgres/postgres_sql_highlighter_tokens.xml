@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<token-def>
+    <tokens>
+        <token id="DATA_TYPE"/>
+        <token id="KEYWORD"/>
+        <token id="FUNCTION"/>
+        <token id="PARAMETER"/>
+    </tokens>
+
+    <token-sets>
+        <token-set id="DATA_TYPES">DATA_TYPE</token-set>
+        <token-set id="KEYWORDS">KEYWORD</token-set>
+        <token-set id="FUNCTIONS">FUNCTION</token-set>
+        <token-set id="PARAMETERS">PARAMETER</token-set>
+    </token-sets>
+</token-def>

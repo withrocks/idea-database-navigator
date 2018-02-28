@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<token-def>
+    <tokens>
+        <token id="UNKNOWN"                value=""                type="unknown"/>
+
+        <!-- DATA TYPES -->
+<!--
+        <token index="0" id="DT_VARCHAR2" value="varchar2" type="datatype" reserved="true"/>
+-->
+
+
+
+        <!-- KEYWORDS -->
+<!--
+        <token index="0" id="KW_A_SET" value="a set" type="keyword"/>
+-->
+
+        
+        
+        <!-- FUNCTIONS -->
+<!--
+        <token index="0" id="FN_ABS" value="abs" type="function"/>
+-->
+
+
+
+        <!-- EXCEPTIONS -->
+<!--
+        <token index="0" id="EX_ACCESS_INTO_NULL" value="access_into_null" type="exception"/>
+-->
+
+    </tokens>
+
+    <token-sets>
+        <token-set id="UNDEFINED">UNKNOWN</token-set>
+    </token-sets>
+</token-def>

@@ -1,0 +1,2135 @@
+<!DOCTYPE data-dictionary [
+        <!ELEMENT data-dictionary (statement-execution-processor)*>
+        <!ELEMENT statement-execution-processor (statement)*>
+        <!ATTLIST statement-execution-processor
+                id CDATA #REQUIRED
+                is-query CDATA #IMPLIED
+                is-prepared-statement CDATA #IMPLIED
+                timeout CDATA #IMPLIED>
+        <!ELEMENT statement (#PCDATA)>
+        <!ATTLIST statement
+                comment CDATA #IMPLIED
+                prefixes CDATA #IMPLIED>
+        ]>
+<data-dictionary>
+    <statement-execution-processor id="users" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                USERNAME as USER_NAME,
+                case when ACCOUNT_STATUS like '%EXPIRED%' then 'Y' else 'N' end as IS_EXPIRED,
+                case when ACCOUNT_STATUS like '%LOCKED%' then 'Y' else 'N' end as IS_LOCKED
+            from DBA_USERS
+        </statement>
+        <statement>
+            select
+                USERNAME as USER_NAME,
+                'N' as IS_EXPIRED,
+                'N' as IS_LOCKED
+            from ALL_USERS
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="roles" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct ROLE as ROLE_NAME from DBA_ROLES
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-user-roles" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                rp.GRANTEE as USER_NAME,
+                rp.GRANTED_ROLE as GRANTED_ROLE_NAME,
+                rp.ADMIN_OPTION as IS_ADMIN_OPTION,
+                rp.DEFAULT_ROLE as IS_DEFAULT_ROLE
+            from
+                DBA_ROLE_PRIVS rp,
+                DBA_USERS u
+            where rp.GRANTEE = u.USERNAME
+            order
+                by rp.GRANTEE,
+                rp.GRANTED_ROLE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-role-roles" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                rp.GRANTEE as ROLE_NAME,
+                rp.GRANTED_ROLE as GRANTED_ROLE_NAME,
+                rp.ADMIN_OPTION as IS_ADMIN_OPTION,
+                rp.DEFAULT_ROLE as IS_DEFAULT_ROLE
+            from
+                DBA_ROLE_PRIVS rp,
+                DBA_ROLES r
+            where rp.GRANTEE = r.ROLE
+            order
+                by rp.GRANTEE,
+                rp.GRANTED_ROLE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="system-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select distinct PRIVILEGE as PRIVILEGE_NAME from DBA_SYS_PRIVS
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-user-privileges" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                sp.GRANTEE as USER_NAME,
+                sp.PRIVILEGE as GRANTED_PRIVILEGE_NAME,
+                sp.ADMIN_OPTION as IS_ADMIN_OPTION
+            from
+                DBA_SYS_PRIVS sp,
+                [PREFIX]_USERS u
+            where sp.GRANTEE = u.USERNAME
+            order by
+                sp.GRANTEE,
+                sp.PRIVILEGE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="all-role-privileges" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                sp.GRANTEE as ROLE_NAME,
+                sp.PRIVILEGE as GRANTED_PRIVILEGE_NAME,
+                sp.ADMIN_OPTION as IS_ADMIN_OPTION
+            from
+                DBA_SYS_PRIVS sp,
+                DBA_ROLES r
+            where sp.GRANTEE = r.ROLE
+            order by
+                sp.GRANTEE,
+                sp.PRIVILEGE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="schemas" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                u.USERNAME as SCHEMA_NAME,
+                'N' as IS_PUBLIC,
+                decode(u.USERNAME, 'SYS', 'Y', 'SYSTEM', 'Y', 'N') as IS_SYSTEM,
+                decode (count(o.OWNER), 0, 'Y', 'N') as IS_EMPTY
+            from [PREFIX]_USERS u, [PREFIX]_OBJECTS o
+            where u.USERNAME = o.OWNER (+)
+            group by USERNAME
+            union (
+                select
+                    'PUBLIC',
+                    'Y' as IS_PUBLIC,
+                    'Y' as IS_SYSTEM,
+                    'N' as IS_EMPTY
+                from DUAL)
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="clusters" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select CLUSTER_NAME
+            from [PREFIX]_CLUSTERS
+            where OWNER = {0}
+            order by CLUSTER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="tables" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                TABLE_NAME,
+                TEMPORARY as IS_TEMPORARY
+            from  [PREFIX]_ALL_TABLES
+            where OWNER = {0}
+            minus
+            select
+                MVIEW_NAME as TABLE_NAME,
+                'N' as IS_TEMPORARY
+            from [PREFIX]_MVIEWS
+            where OWNER = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="views" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                VIEW_NAME,
+                VIEW_TYPE_OWNER,
+                VIEW_TYPE,
+                'N' as IS_SYSTEM_VIEW
+            from [PREFIX]_VIEWS
+            where OWNER = {0}
+            order by VIEW_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="materialized-views" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                MVIEW_NAME as VIEW_NAME,
+                null as VIEW_TYPE_OWNER,
+                null as VIEW_TYPE,
+                'N' as IS_SYSTEM_VIEW
+            from [PREFIX]_MVIEWS
+            where OWNER = {0}
+            order by MVIEW_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-columns" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                col.COLUMN_NAME,
+                col.COLUMN_ID as POSITION,
+                null as DATA_TYPE_PACKAGE,
+                col.DATA_TYPE_OWNER,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                col.DATA_LENGTH,
+                col.DATA_PRECISION,
+                col.DATA_SCALE,
+                'N' as IS_SET,
+                col.NULLABLE as IS_NULLABLE,
+                decode (col.HIDDEN_COLUMN, 'YES', 'Y', 'N' ) as IS_HIDDEN,
+                decode (pk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_PRIMARY_KEY,
+                decode (fk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_FOREIGN_KEY,
+                decode (uk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_UNIQUE_KEY
+            from [PREFIX]_TAB_COLS col,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'P') pk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'R') fk,
+                 (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'U') uk
+            where
+                col.OWNER = {0} and
+                col.TABLE_NAME = {1} and
+                col.OWNER = pk.OWNER(+) and
+                col.TABLE_NAME = pk.TABLE_NAME(+) and
+                col.COLUMN_NAME = pk.COLUMN_NAME(+) and
+                col.OWNER = fk.OWNER(+) and
+                col.TABLE_NAME = fk.TABLE_NAME(+) and
+                col.COLUMN_NAME = fk.COLUMN_NAME(+) and
+                col.OWNER = uk.OWNER(+) and
+                col.TABLE_NAME = uk.TABLE_NAME(+) and
+                col.COLUMN_NAME = uk.COLUMN_NAME(+)
+            order by col.COLUMN_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL" comment="Oracle 8.0">
+            select
+                col.COLUMN_NAME,
+                col.COLUMN_ID as POSITION,
+                null as DATA_TYPE_PACKAGE,
+                col.DATA_TYPE_OWNER,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                col.DATA_LENGTH,
+                col.DATA_PRECISION,
+                col.DATA_SCALE,
+                'N' as IS_SET,
+                col.NULLABLE as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                decode (pk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_PRIMARY_KEY,
+                decode (fk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_FOREIGN_KEY,
+                decode (uk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_UNIQUE_KEY
+            from [PREFIX]_TAB_COLUMNS col,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'P') pk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'R') fk,
+                 (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'U') uk
+            where
+                col.OWNER = {0} and
+                col.TABLE_NAME = {1} and
+                col.OWNER = pk.OWNER(+) and
+                col.TABLE_NAME = pk.TABLE_NAME(+) and
+                col.COLUMN_NAME = pk.COLUMN_NAME(+) and
+                col.OWNER = fk.OWNER(+) and
+                col.TABLE_NAME = fk.TABLE_NAME(+) and
+                col.COLUMN_NAME = fk.COLUMN_NAME(+) and
+                col.OWNER = uk.OWNER(+) and
+                col.TABLE_NAME = uk.TABLE_NAME(+) and
+                col.COLUMN_NAME = uk.COLUMN_NAME(+)
+            order by col.COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-columns" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                col.TABLE_NAME as DATASET_NAME,
+                col.COLUMN_NAME,
+                col.COLUMN_ID as POSITION,
+                null as DATA_TYPE_PACKAGE,
+                col.DATA_TYPE_OWNER,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                col.DATA_LENGTH,
+                col.DATA_PRECISION,
+                col.DATA_SCALE,
+                'N' as IS_SET,
+                col.NULLABLE as IS_NULLABLE,
+                decode (col.HIDDEN_COLUMN, 'YES', 'Y', 'N' ) as IS_HIDDEN,
+                decode (pk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_PRIMARY_KEY,
+                decode (fk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_FOREIGN_KEY,
+                decode (uk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_UNIQUE_KEY
+            from [PREFIX]_TAB_COLS col,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'P') pk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'R') fk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'U') uk
+            where
+                col.OWNER = {0} and
+                col.OWNER = pk.OWNER(+) and
+                col.TABLE_NAME = pk.TABLE_NAME(+) and
+                col.COLUMN_NAME = pk.COLUMN_NAME(+) and
+                col.OWNER = fk.OWNER(+) and
+                col.TABLE_NAME = fk.TABLE_NAME(+) and
+                col.COLUMN_NAME = fk.COLUMN_NAME(+) and
+                col.OWNER = uk.OWNER(+) and
+                col.TABLE_NAME = uk.TABLE_NAME(+) and
+                col.COLUMN_NAME = uk.COLUMN_NAME(+)
+            order by col.TABLE_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL" comment="Oracle 8.0">
+            select
+                col.TABLE_NAME as DATASET_NAME,
+                col.COLUMN_NAME,
+                col.COLUMN_ID as POSITION,
+                null as DATA_TYPE_PACKAGE,
+                col.DATA_TYPE_OWNER,
+                col.DATA_TYPE as DATA_TYPE_NAME,
+                col.DATA_LENGTH,
+                col.DATA_PRECISION,
+                col.DATA_SCALE,
+                'N' as IS_SET,
+                col.NULLABLE as IS_NULLABLE,
+                'N' as IS_HIDDEN,
+                decode (pk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_PRIMARY_KEY,
+                decode (fk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_FOREIGN_KEY,
+                decode (uk.CONSTRAINT_NAME, null, 'N', 'Y') as IS_UNIQUE_KEY
+            from [PREFIX]_TAB_COLUMNS col,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'P') pk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'R') fk,
+                (select
+                     cc.OWNER,
+                     cc.TABLE_NAME,
+                     cc.CONSTRAINT_NAME,
+                     cc.COLUMN_NAME
+                 from
+                      [PREFIX]_CONSTRAINTS con,
+                      [PREFIX]_CONS_COLUMNS cc
+                 where
+                      con.OWNER = cc.OWNER and
+                      con.TABLE_NAME = cc.TABLE_NAME and
+                      con.CONSTRAINT_NAME = cc.CONSTRAINT_NAME and
+                      con.CONSTRAINT_TYPE = 'U') uk
+            where
+                col.OWNER = {0} and
+                col.OWNER = pk.OWNER(+) and
+                col.TABLE_NAME = pk.TABLE_NAME(+) and
+                col.COLUMN_NAME = pk.COLUMN_NAME(+) and
+                col.OWNER = fk.OWNER(+) and
+                col.TABLE_NAME = fk.TABLE_NAME(+) and
+                col.COLUMN_NAME = fk.COLUMN_NAME(+) and
+                col.OWNER = uk.OWNER(+) and
+                col.TABLE_NAME = uk.TABLE_NAME(+) and
+                col.COLUMN_NAME = uk.COLUMN_NAME(+)
+            order by col.TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                COLUMN_NAME,
+                CONSTRAINT_NAME,
+                POSITION
+            from [PREFIX]_CONS_COLUMNS
+            where
+                OWNER = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-constraint-relations" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+               TABLE_NAME as DATASET_NAME,
+               COLUMN_NAME,
+               CONSTRAINT_NAME,
+               POSITION
+            from [PREFIX]_CONS_COLUMNS
+            where OWNER = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                COLUMN_NAME,
+                INDEX_NAME
+            from [PREFIX]_IND_COLUMNS
+            where
+                TABLE_OWNER = {0} and
+                TABLE_NAME = {1}
+            order by COLUMN_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-column-index-relations" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                TABLE_NAME,
+                COLUMN_NAME,
+                INDEX_NAME
+            from [PREFIX]_IND_COLUMNS
+            where TABLE_OWNER = {0}
+            order by TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-constraints" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                TABLE_NAME as DATASET_NAME,
+                CONSTRAINT_NAME,
+                case CONSTRAINT_TYPE
+                    when 'C' then 'CHECK'
+                    when 'P' then 'PRIMARY KEY'
+                    when 'U' then 'UNIQUE'
+                    when 'R' then 'FOREIGN KEY'
+                    when 'V' then 'VIEW CHECK'
+                    when 'O' then 'VIEW READONLY'
+                end as CONSTRAINT_TYPE,
+                R_OWNER as FK_CONSTRAINT_OWNER,
+                R_CONSTRAINT_NAME as FK_CONSTRAINT_NAME,
+                decode(STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                SEARCH_CONDITION as CHECK_CONDITION
+            from [PREFIX]_CONSTRAINTS
+            where OWNER = {0}
+            order by
+                TABLE_NAME,
+                CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="constraints" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                CONSTRAINT_NAME,
+                case CONSTRAINT_TYPE
+                    when 'C' then 'CHECK'
+                    when 'P' then 'PRIMARY KEY'
+                    when 'U' then 'UNIQUE'
+                    when 'R' then 'FOREIGN KEY'
+                    when 'V' then 'VIEW CHECK'
+                    when 'O' then 'VIEW READONLY'
+                end as CONSTRAINT_TYPE,
+                R_OWNER as FK_CONSTRAINT_OWNER,
+                R_CONSTRAINT_NAME as FK_CONSTRAINT_NAME,
+                decode(STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                SEARCH_CONDITION as CHECK_CONDITION
+            from [PREFIX]_CONSTRAINTS
+            where
+                OWNER = {0} and
+                TABLE_NAME = {1}
+            order by CONSTRAINT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="indexes" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                INDEX_NAME,
+                decode(UNIQUENESS, 'UNIQUE', 'Y', 'N') as IS_UNIQUE,
+                decode(STATUS, 'VALID', 'Y', 'N') as IS_VALID
+            from [PREFIX]_INDEXES
+            where
+                OWNER = {0} and
+                TABLE_NAME = {1}
+            order by INDEX_NAME asc            
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-indexes" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                INDEX_NAME,
+                TABLE_NAME,
+                decode(UNIQUENESS, 'UNIQUE', 'Y', 'N') as IS_UNIQUE,
+                decode(STATUS, 'VALID', 'Y', 'N') as IS_VALID
+            from [PREFIX]_INDEXES
+            where OWNER = {0}
+            order by
+                TABLE_NAME,
+                INDEX_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="nested-tables" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                TABLE_NAME as NESTED_TABLE_NAME,
+                PARENT_TABLE_COLUMN as TABLE_COLUMN,
+                TABLE_TYPE_OWNER as DATA_TYPE_OWNER,
+                TABLE_TYPE_NAME as DATA_TYPE_NAME
+                from [PREFIX]_NESTED_TABLES
+            where
+                OWNER = {0} and
+                PARENT_TABLE_NAME = {1}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-nested-tables" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                TABLE_NAME as NESTED_TABLE_NAME,
+                PARENT_TABLE_NAME as TABLE_NAME,
+                PARENT_TABLE_COLUMN as TABLE_COLUMN,
+                TABLE_TYPE_OWNER as DATA_TYPE_OWNER,
+                TABLE_TYPE_NAME as DATA_TYPE_NAME
+            from [PREFIX]_NESTED_TABLES
+            where OWNER = {0}
+            order by PARENT_TABLE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct
+                t.TABLE_NAME as DATASET_NAME,
+                t.TRIGGER_NAME,
+                t.TRIGGER_TYPE,
+                t.TRIGGERING_EVENT,
+                decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                decode(nvl(o.STATUS, 'VALID'), 'VALID', 'Y', 'N') as IS_VALID,
+                decode(nvl(o.DEBUGINFO, 'F'), 'T', 'Y', 'N') as IS_DEBUG,
+                case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+                [PREFIX]_TRIGGERS t,
+                SYS.ALL_PROBE_OBJECTS o
+            where
+                t.TABLE_OWNER = {0} and
+                t.TABLE_NAME = {1} and
+                o.OWNER (+) = t.OWNER and
+                o.OBJECT_NAME (+) = t.TRIGGER_NAME and
+                o.OBJECT_TYPE (+)= 'TRIGGER'
+            order by TRIGGER_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select distinct
+                t.TABLE_NAME as DATASET_NAME,
+                t.TRIGGER_NAME,
+                t.TRIGGER_TYPE,
+                t.TRIGGERING_EVENT,
+                decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                decode(o.STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                'N' as IS_DEBUG,
+                case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+                [PREFIX]_TRIGGERS t,
+                [PREFIX]_OBJECTS o
+            where
+                o.OWNER = t.OWNER and
+                o.OBJECT_NAME = t.TRIGGER_NAME and
+                o.OBJECT_TYPE = 'TRIGGER' and
+                t.TABLE_OWNER = {0} and
+                t.TABLE_NAME = {1}
+            order by TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-dataset-triggers" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct
+                t.TABLE_NAME as DATASET_NAME,
+                t.TRIGGER_NAME,
+                t.TRIGGER_TYPE,
+                t.TRIGGERING_EVENT,
+                decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                decode(nvl(o.STATUS, 'VALID'), 'VALID', 'Y', 'N') as IS_VALID,
+                decode(nvl(o.DEBUGINFO, 'F'), 'T', 'Y', 'N') as IS_DEBUG,
+                case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+                [PREFIX]_TRIGGERS t,
+                SYS.ALL_PROBE_OBJECTS o
+            where
+                t.TABLE_OWNER = {0} and
+                t.BASE_OBJECT_TYPE in ('TABLE', 'VIEW') and
+                o.OWNER (+) = t.OWNER and
+                o.OBJECT_NAME (+) = t.TRIGGER_NAME and
+                o.OBJECT_TYPE (+) = 'TRIGGER'
+            order by
+                t.TABLE_NAME,
+                t.TRIGGER_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select distinct
+                t.TABLE_NAME as DATASET_NAME,
+                t.TRIGGER_NAME,
+                t.TRIGGER_TYPE,
+                t.TRIGGERING_EVENT,
+                decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+                decode(o.STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                'N' as IS_DEBUG,
+                case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+                [PREFIX]_TRIGGERS t,
+                [PREFIX]_OBJECTS o
+            where
+                o.OWNER = t.OWNER and
+                o.OBJECT_NAME = t.TRIGGER_NAME and
+                o.OBJECT_TYPE = 'TRIGGER' and
+                t.TABLE_OWNER = {0} and
+                t.BASE_OBJECT_TYPE in ('TABLE', 'VIEW' )
+            order by
+                TABLE_NAME,
+                TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="database-triggers" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct
+            t.TRIGGER_NAME,
+            t.TRIGGER_TYPE,
+            t.TRIGGERING_EVENT,
+            decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+            decode(nvl(o.STATUS, 'VALID'), 'VALID', 'Y', 'N') as IS_VALID,
+            decode(nvl(o.DEBUGINFO, 'F'), 'T', 'Y', 'N') as IS_DEBUG,
+            case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+            [PREFIX]_TRIGGERS t,
+            SYS.ALL_PROBE_OBJECTS o
+            where
+            t.OWNER = {0} and
+            t.BASE_OBJECT_TYPE = 'DATABASE' and
+            o.OWNER (+) = t.OWNER and
+            o.OBJECT_NAME (+) = t.TRIGGER_NAME and
+            o.OBJECT_TYPE (+) = 'TRIGGER'
+            order by
+            t.TRIGGER_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select distinct
+            t.TRIGGER_NAME,
+            t.TRIGGER_TYPE,
+            t.TRIGGERING_EVENT,
+            decode(t.STATUS, 'ENABLED', 'Y', 'N') as IS_ENABLED,
+            decode(o.STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+            'N' as IS_DEBUG,
+            case when t.TRIGGER_TYPE like '%EACH ROW%' then 'Y' else 'N' end as IS_FOR_EACH_ROW
+            from
+            [PREFIX]_TRIGGERS t,
+            [PREFIX]_OBJECTS o
+            where
+            o.OWNER = t.OWNER and
+            o.OBJECT_NAME = t.TRIGGER_NAME and
+            o.OBJECT_TYPE = 'TRIGGER' and
+            t.OWNER = {0} and
+            t.BASE_OBJECT_TYPE = 'DATABASE'
+            order by
+            TRIGGER_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="functions" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ao.OBJECT_NAME as FUNCTION_NAME,
+                0 as POSITION,
+                0 as OVERLOAD,
+                decode(ao.STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') as IS_DEBUG,
+                'Y' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_OBJECTS ao,
+                SYS.ALL_PROBE_OBJECTS apo
+            where
+                ao.OWNER = {0} and
+                ao.OBJECT_TYPE = 'FUNCTION' and
+                apo.OWNER (+) = ao.OWNER and
+                apo.OBJECT_NAME (+) = ao.OBJECT_NAME and
+                apo.OBJECT_TYPE (+) = ao.OBJECT_TYPE
+            order by ao.OBJECT_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                OBJECT_NAME as FUNCTION_NAME,
+                0 as POSITION,
+                0 as OVERLOAD,
+                decode(STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from [PREFIX]_OBJECTS
+            where
+                OWNER = {0} and
+                OBJECT_TYPE = 'FUNCTION'
+            order by OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="procedures" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ao.OBJECT_NAME as PROCEDURE_NAME,
+                0 as OVERLOAD,
+                0 as POSITION,
+                decode(ao.STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') as IS_DEBUG,
+                'Y' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_OBJECTS ao,
+                SYS.ALL_PROBE_OBJECTS apo
+            where
+                ao.OWNER = {0} and
+                ao.OBJECT_TYPE = 'PROCEDURE' and
+                apo.OWNER (+) = ao.OWNER and
+                apo.OBJECT_NAME (+) = ao.OBJECT_NAME and
+                apo.OBJECT_TYPE (+) = ao.OBJECT_TYPE
+            order by ao.OBJECT_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                OBJECT_NAME as PROCEDURE_NAME,
+                0 as OVERLOAD,
+                0 as POSITION,
+                decode(STATUS, 'VALID', 'Y', 'N') as IS_VALID,
+                'N' as IS_DEBUG,
+                'Y' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from [PREFIX]_OBJECTS
+            where
+                OWNER = {0} and
+                OBJECT_TYPE = 'PROCEDURE'
+            order by OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="dimensions" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select DIMENSION_NAME
+            from [PREFIX]_DIMENSIONS
+            where OWNER = {0}
+            order by DIMENSION_NAME
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="packages" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ao.OBJECT_NAME as PACKAGE_NAME,
+                max(case ao.OBJECT_TYPE when 'PACKAGE'      then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_SPEC_VALID,
+                max(case ao.OBJECT_TYPE when 'PACKAGE BODY' then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_BODY_VALID,
+                max(case ao.OBJECT_TYPE when 'PACKAGE'      then decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') end) as IS_SPEC_DEBUG,
+                max(case ao.OBJECT_TYPE when 'PACKAGE BODY' then decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') end) as IS_BODY_DEBUG
+            from
+                [PREFIX]_OBJECTS ao,
+                SYS.ALL_PROBE_OBJECTS apo
+            where
+                ao.OBJECT_TYPE in ('PACKAGE', 'PACKAGE BODY') and
+                ao.OWNER = {0} and
+                apo.OWNER (+) = ao.OWNER and
+                apo.OBJECT_NAME (+) = ao.OBJECT_NAME and
+                apo.OBJECT_TYPE (+) = ao.OBJECT_TYPE
+            group by ao.OBJECT_NAME
+            order by ao.OBJECT_NAME
+        </statement>        
+        <statement prefixes="DBA, ALL">
+            select
+                ao.OBJECT_NAME as PACKAGE_NAME,
+                max(case ao.OBJECT_TYPE when 'PACKAGE' then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_SPEC_VALID,
+                max(case ao.OBJECT_TYPE when 'PACKAGE BODY' then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_BODY_VALID,
+                'N' as IS_SPEC_DEBUG,
+                'N' as IS_BODY_DEBUG
+            from
+                [PREFIX]_OBJECTS ao
+            where
+                ao.OBJECT_TYPE in ('PACKAGE', 'PACKAGE BODY') and
+                ao.OWNER = {0}
+            group by ao.OBJECT_NAME
+            order by ao.OBJECT_NAME
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="package-functions" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 0 and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement>
+            select
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 0 and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-package-functions" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.POSITION = 0 and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'PACKAGE') and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.POSITION = 0 and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'PACKAGE') and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="package-procedures" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement>
+            select
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-package-procedures" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'PACKAGE') and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'PACKAGE') and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="package-types" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct TYPE_SUBNAME as TYPE_NAME
+            from [PREFIX]_ARGUMENTS
+            where
+                TYPE_SUBNAME is not null and 
+                TYPE_OWNER = {0} and
+                TYPE_NAME = {1}
+            order by TYPE_SUBNAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-package-types" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct
+                TYPE_NAME as PACKAGE_NAME,
+                TYPE_SUBNAME as TYPE_NAME
+            from [PREFIX]_ARGUMENTS
+            where
+                TYPE_SUBNAME is not null and
+                TYPE_OWNER = {0}
+            order by
+                PACKAGE_NAME,
+                TYPE_SUBNAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="types" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                t.TYPE_NAME as TYPE_NAME,
+                max(case apo.OBJECT_TYPE when 'TYPE'      then decode(nvl(apo.STATUS, 'VALID'), 'VALID', 'Y', 'N') end) as IS_SPEC_VALID,
+                max(case apo.OBJECT_TYPE when 'TYPE BODY' then decode(nvl(apo.STATUS, 'VALID'), 'VALID', 'Y', 'N') end) as IS_BODY_VALID,
+                max(case apo.OBJECT_TYPE when 'TYPE'      then decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') end) as IS_SPEC_DEBUG,
+                max(case apo.OBJECT_TYPE when 'TYPE BODY' then decode(nvl(apo.DEBUGINFO, 'F'), 'T', 'Y', 'N') end) as IS_BODY_DEBUG,
+                t.SUPERTYPE_OWNER,
+                t.SUPERTYPE_NAME,
+                t.TYPECODE,
+                ct.ELEM_TYPE_OWNER as COLLECTION_DATA_TYPE_OWNER,
+                ct.ELEM_TYPE_NAME  as COLLECTION_DATA_TYPE_NAME,
+                null               as COLLECTION_DATA_TYPE_PACKAGE,
+                ct.LENGTH          as COLLECTION_DATA_LENGTH,
+                ct.PRECISION       as COLLECTION_DATA_PRECISION,
+                ct.SCALE           as COLLECTION_DATA_SCALE,
+                'N'                as COLLECTION_IS_SET
+            from
+                [PREFIX]_TYPES t,
+                [PREFIX]_COLL_TYPES ct,
+                SYS.ALL_PROBE_OBJECTS apo
+            where
+                t.OWNER = {0} and
+                apo.OWNER (+) = t.OWNER and
+                apo.OBJECT_NAME (+) = t.TYPE_NAME and
+                apo.OBJECT_TYPE in ('TYPE', 'TYPE BODY') and
+                ct.OWNER (+) = t.OWNER and
+                ct.TYPE_NAME (+) = t.TYPE_NAME
+            group by
+                t.TYPE_NAME,
+                t.SUPERTYPE_OWNER,
+                t.SUPERTYPE_NAME,
+                t.TYPECODE,
+                ct.ELEM_TYPE_OWNER,
+                ct.ELEM_TYPE_NAME,
+                ct.LENGTH,
+                ct.PRECISION,
+                ct.SCALE
+            order by
+                t.TYPE_NAME,
+                t.TYPECODE asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                ao.OBJECT_NAME as TYPE_NAME,
+                max(case ao.OBJECT_TYPE when 'TYPE' then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_SPEC_VALID,
+                max(case ao.OBJECT_TYPE when 'TYPE BODY' then decode(ao.STATUS, 'VALID', 'Y', 'N') end) as IS_BODY_VALID,
+                'N' as IS_SPEC_DEBUG,
+                'N' as IS_BODY_DEBUG,
+                t.SUPERTYPE_OWNER,
+                t.SUPERTYPE_NAME,
+                t.TYPECODE
+            from
+                [PREFIX]_OBJECTS ao,
+                [PREFIX]_TYPES t
+            where
+                ao.OBJECT_TYPE in ('TYPE', 'TYPE BODY') and
+                ao.OWNER = t.OWNER and
+                ao.OBJECT_NAME = t.TYPE_NAME and
+                ao.OWNER = {0}
+            group by
+                ao.OBJECT_NAME,
+                t.SUPERTYPE_OWNER,
+                t.SUPERTYPE_NAME,
+                t.TYPECODE
+            order by
+                ao.OBJECT_NAME,
+                t.TYPECODE asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="type-attributes" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+             select
+                 ATTR_NAME as ATTRIBUTE_NAME,
+                 ATTR_NO as POSITION,
+                 ATTR_TYPE_OWNER as DATA_TYPE_OWNER,
+                 null as DATA_TYPE_PACKAGE,
+                 ATTR_TYPE_NAME as DATA_TYPE_NAME,
+                 LENGTH as DATA_LENGTH,
+                 PRECISION as DATA_PRECISION,
+                 SCALE as DATA_SCALE,
+                'N' as IS_SET
+             from  [PREFIX]_TYPE_ATTRS
+             where
+                 OWNER = {0} and
+                 TYPE_NAME = {1}
+             order by ATTRIBUTE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-type-attributes" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+             select
+                 TYPE_NAME,
+                 ATTR_NAME as ATTRIBUTE_NAME,
+                 ATTR_NO as POSITION,
+                 ATTR_TYPE_OWNER as DATA_TYPE_OWNER,
+                 null as DATA_TYPE_PACKAGE,
+                 ATTR_TYPE_NAME as DATA_TYPE_NAME,
+                 LENGTH as DATA_LENGTH,
+                 PRECISION as DATA_PRECISION,
+                 SCALE as DATA_SCALE,
+                 'N' as IS_SET
+             from [PREFIX]_TYPE_ATTRS
+             where OWNER = {0}
+             order by TYPE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="program-type-attributes" is-query="true" is-prepared-statement="true">
+        <statement  prefixes="DBA, ALL">
+            select distinct
+                ARGUMENT_NAME as ATTRIBUTE_NAME,
+                POSITION,
+                TYPE_OWNER as DATA_TYPE_OWNER,
+                decode(TYPE_SUBNAME, null, null, TYPE_NAME) as DATA_TYPE_PACKAGE,
+                decode(TYPE_SUBNAME, null, nvl(TYPE_NAME, DATA_TYPE), TYPE_SUBNAME) as DATA_TYPE_NAME,
+                DATA_LENGTH,
+                DATA_PRECISION,
+                DATA_SCALE,
+                'N' as IS_SET
+            from [PREFIX]_ARGUMENTS aa1
+            where
+                ARGUMENT_NAME is not null and
+                DATA_LEVEL = 1 and
+                PACKAGE_NAME = (
+                    select PACKAGE_NAME
+                    from [PREFIX]_ARGUMENTS
+                    where
+                       TYPE_OWNER = {0} and
+                       TYPE_NAME = {1} and
+                       TYPE_SUBNAME = {2} and
+                       DATA_LEVEL = 0 and
+                       rownum = 1) and
+                SEQUENCE
+                     between(
+                        select SEQUENCE
+                        from [PREFIX]_ARGUMENTS aa2
+                        where
+                            aa2.TYPE_OWNER = {0} and
+                            aa2.TYPE_NAME = {1} and
+                            aa2.TYPE_SUBNAME = {2} and
+                            aa2.DATA_LEVEL = 0and
+                            rownum = 1 and
+                            aa2.OWNER = aa1.OWNER and
+                            aa2.PACKAGE_NAME = aa1.PACKAGE_NAME and
+                            aa2.OBJECT_NAME = aa1.OBJECT_NAME and
+                            nvl(aa2.OVERLOAD, 0) = nvl(aa1.OVERLOAD, 0) )
+                     and nvl((
+                        select min(SEQUENCE)
+                        from [PREFIX]_ARGUMENTS aa3
+                        where
+                            aa3.OWNER = aa1.OWNER and
+                            aa3.PACKAGE_NAME = aa1.PACKAGE_NAME and
+                            aa3.OBJECT_NAME = aa1.OBJECT_NAME and
+                            nvl(aa3.OVERLOAD, 0) = nvl(aa1.OVERLOAD, 0) and
+                            DATA_LEVEL = 0 and
+                            rownum = 1 and
+                            SEQUENCE > (
+                                select SEQUENCE
+                                from [PREFIX]_ARGUMENTS aa4
+                                where
+                                    aa4.TYPE_OWNER = {0} and
+                                    aa4.TYPE_NAME = {1} and
+                                    aa4.TYPE_SUBNAME = {2} and
+                                    aa4.DATA_LEVEL = 0 and
+                                    rownum = 1 and
+                                    aa4.OWNER = aa1.OWNER and
+                                    aa4.PACKAGE_NAME = aa1.PACKAGE_NAME and
+                                    aa4.OBJECT_NAME = aa1.OBJECT_NAME and
+                                    nvl(aa4.OVERLOAD, 0) = nvl(aa1.OVERLOAD, 0))), 0)
+            <!--order by SEQUENCE asc-->
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="type-functions" is-query="true" is-prepared-statement="true">
+        <statement  prefixes="DBA, ALL">
+            select
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 0  and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement>
+            select
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 0 and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-type-functions" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME as TYPE_NAME,
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.POSITION = 0 and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from  [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'TYPE') and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME as TYPE_NAME,
+                a.OBJECT_NAME as FUNCTION_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.POSITION = 0 and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'TYPE') and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="type-procedures" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement>
+            select
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.PACKAGE_NAME = {1} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-type-procedures" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME as TYPE_NAME,
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.SUBPROGRAM_ID as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                [PREFIX]_ARGUMENTS a,
+                [PREFIX]_PROCEDURES p
+            where
+                a.OWNER = {0} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'TYPE') and
+                p.OWNER = a.OWNER and
+                p.OBJECT_NAME = a.PACKAGE_NAME and
+                p.PROCEDURE_NAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select
+                a.PACKAGE_NAME as TYPE_NAME,
+                a.OBJECT_NAME as PROCEDURE_NAME,
+                p.PROCEDURE# as POSITION,
+                a.OVERLOAD,
+                'N' as IS_DETERMINISTIC,
+                'PSQL' as LANGUAGE
+            from
+                ALL_ARGUMENTS a,
+                SYS.PROCEDUREINFO$ p,
+                SYS.USER$ u,
+                SYS.OBJ$ o
+            where
+                a.OWNER = {0} and
+                a.POSITION = 1 and
+                a.SEQUENCE IN (1, 0) and
+                a.PACKAGE_NAME in (
+                    select OBJECT_NAME
+                    from [PREFIX]_OBJECTS
+                    where OWNER = {0} and OBJECT_TYPE = 'TYPE') and
+                u.NAME = a.OWNER and
+                o.OWNER# = u.USER# and
+                o.NAME = a.PACKAGE_NAME and
+                p.OBJ# = o.OBJ# and
+                p.PROCEDURENAME = a.OBJECT_NAME and
+                nvl(p.OVERLOAD#, 0) = nvl(a.OVERLOAD, 0)
+            order by
+                a.PACKAGE_NAME,
+                a.OBJECT_NAME,
+                a.OVERLOAD asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="method-arguments" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ARGUMENT_NAME,
+                PACKAGE_NAME as PROGRAM_NAME,
+                OBJECT_NAME as METHOD_NAME,
+                null as METHOD_TYPE,
+                OVERLOAD,
+                POSITION,
+                SEQUENCE,
+                IN_OUT,
+                TYPE_OWNER as DATA_TYPE_OWNER,
+                decode(TYPE_SUBNAME, null, null, TYPE_NAME) as DATA_TYPE_PACKAGE,
+                decode(TYPE_SUBNAME, null, nvl(TYPE_NAME, DATA_TYPE), TYPE_SUBNAME) as DATA_TYPE_NAME,
+                DATA_LENGTH,
+                DATA_PRECISION,
+                DATA_SCALE,
+                'N' as IS_SET
+            from [PREFIX]_ARGUMENTS
+            where
+                OWNER = {0} and
+                PACKAGE_NAME is null and
+                OBJECT_NAME = {1} and
+                DATA_LEVEL = 0 and
+                (OVERLOAD = {3} or (OVERLOAD is NULL and {3} = 0)) and
+                (ARGUMENT_NAME is not null or POSITION = 0)
+            order by
+                OBJECT_NAME,
+                OVERLOAD,
+                SEQUENCE asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="program-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ARGUMENT_NAME,
+                PACKAGE_NAME as PROGRAM_NAME,
+                OBJECT_NAME as METHOD_NAME,
+                null as METHOD_TYPE,
+                OVERLOAD,
+                POSITION,
+                SEQUENCE,
+                IN_OUT,
+                TYPE_OWNER as DATA_TYPE_OWNER,
+                decode(TYPE_SUBNAME, null, null, TYPE_NAME) as DATA_TYPE_PACKAGE,
+                decode(TYPE_SUBNAME, null, nvl(TYPE_NAME, DATA_TYPE), TYPE_SUBNAME) as DATA_TYPE_NAME,
+                DATA_LENGTH,
+                DATA_PRECISION,
+                DATA_SCALE,
+                'N' as IS_SET
+            from [PREFIX]_ARGUMENTS
+            where
+                OWNER = {0} and
+                PACKAGE_NAME = {1} and
+                OBJECT_NAME = {2} and
+                DATA_LEVEL = 0 and
+                (OVERLOAD = {3} or (OVERLOAD is NULL and {3} = 0)) and
+                (ARGUMENT_NAME is not null or POSITION = 0)
+            order by
+                OVERLOAD,
+                SEQUENCE asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="all-method-arguments" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                ARGUMENT_NAME,
+                PACKAGE_NAME as PROGRAM_NAME,
+                OBJECT_NAME as METHOD_NAME,
+                null as METHOD_TYPE,
+                OVERLOAD,
+                POSITION,
+                SEQUENCE,
+                IN_OUT,
+                TYPE_OWNER as DATA_TYPE_OWNER,
+                decode(TYPE_SUBNAME, null, null, TYPE_NAME) as DATA_TYPE_PACKAGE,
+                decode(TYPE_SUBNAME, null, nvl(TYPE_NAME, DATA_TYPE), TYPE_SUBNAME) as DATA_TYPE_NAME,
+                DATA_LENGTH,
+                DATA_PRECISION,
+                DATA_SCALE,
+                'N' as IS_SET
+            from [PREFIX]_ARGUMENTS
+            where
+                OWNER = {0} and
+                DATA_LEVEL = 0 and
+                (ARGUMENT_NAME is not null or POSITION = 0)
+            order by
+                PACKAGE_NAME,
+                OBJECT_NAME,
+                OVERLOAD,
+                POSITION asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="database-links" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                DB_LINK as DBLINK_NAME,
+                USERNAME as USER_NAME,
+                HOST
+            from [PREFIX]_DB_LINKS
+            where OWNER = {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="referenced-objects" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct * from (
+                select
+                    ro.OWNER OBJECT_OWNER,
+                    ro.OBJECT_NAME OBJECT_NAME,
+                    ro.OBJECT_TYPE OBJECT_TYPE
+                from
+                    PUBLIC_DEPENDENCY pd,
+                    [PREFIX]_OBJECTS o,
+                    [PREFIX]_OBJECTS ro
+                where
+                    ro.OBJECT_ID = pd.REFERENCED_OBJECT_ID and
+                    o.OBJECT_ID = pd.OBJECT_ID and
+                    (o.OWNER != ro.OWNER or o.OBJECT_NAME != ro.OBJECT_NAME) and
+                    o.OWNER = {0} and
+                    o.OBJECT_NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select distinct * from (
+                select
+                    REFERENCED_OWNER as OBJECT_OWNER,
+                    REFERENCED_NAME as OBJECT_NAME,
+                    decode(REFERENCED_TYPE, 'PACKAGE BODY', 'PACKAGE', 'TYPE BODY', 'TYPE', REFERENCED_TYPE) as OBJECT_TYPE
+                from [PREFIX]_DEPENDENCIES
+                where
+                   (OWNER != REFERENCED_OWNER or NAME != REFERENCED_NAME) and
+                    OWNER = {0} and
+                    NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="referencing-objects" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct * from (
+                select
+                    o.OWNER OBJECT_OWNER,
+                    o.OBJECT_NAME OBJECT_NAME,
+                    decode(o.OBJECT_TYPE, 'PACKAGE BODY', 'PACKAGE', 'TYPE BODY', 'TYPE', o.OBJECT_TYPE) as OBJECT_TYPE
+                from
+                    PUBLIC_DEPENDENCY pd,
+                    [PREFIX]_OBJECTS o,
+                    [PREFIX]_OBJECTS ro
+                where
+                    o.OBJECT_ID = pd.OBJECT_ID and
+                    ro.OBJECT_ID = pd.REFERENCED_OBJECT_ID and
+                    (o.OWNER != ro.OWNER or o.OBJECT_NAME != ro.OBJECT_NAME) and
+                    ro.OWNER = {0} and
+                    ro.OBJECT_NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select distinct * from (
+                select
+                    OWNER as OBJECT_OWNER,
+                    NAME as OBJECT_NAME,
+                    decode(TYPE, 'PACKAGE BODY', 'PACKAGE', 'TYPE BODY', 'TYPE', TYPE) as OBJECT_TYPE
+                from [PREFIX]_DEPENDENCIES where
+                    (OWNER != REFERENCED_OWNER or NAME != REFERENCED_NAME) and
+                    REFERENCED_OWNER = {0} and
+                    REFERENCED_NAME = {1})
+            order by
+                OBJECT_OWNER,
+                OBJECT_TYPE,
+                OBJECT_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="referencing-schemas" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select distinct OWNER as SCHEMA_NAME
+            from [PREFIX]_DEPENDENCIES
+            where
+                REFERENCED_OWNER = {0} and
+                REFERENCED_NAME = {1}
+            order by
+                OWNER
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="sequences" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select SEQUENCE_NAME
+            from [PREFIX]_SEQUENCES
+            where SEQUENCE_OWNER = {0}
+            order by SEQUENCE_NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="synonyms" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                NAME as SYNONYM_NAME,
+                REFERENCED_OWNER as OBJECT_OWNER,
+                REFERENCED_NAME as OBJECT_NAME,
+                REFERENCED_TYPE as OBJECT_TYPE,
+                'Y' as IS_VALID
+            from [PREFIX]_DEPENDENCIES d
+            where
+                TYPE = 'SYNONYM' and
+                REFERENCED_TYPE != 'JAVA CLASS' and
+                OWNER = {0}
+            order by NAME asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="view-source-code" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select TEXT
+            from [PREFIX]_VIEWS
+            where
+                OWNER = {0} and
+                VIEW_NAME = {1}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="materialized-view-source-code" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select QUERY as TEXT
+            from [PREFIX]_MVIEWS
+            where
+                OWNER = {0} and
+                MVIEW_NAME = {1}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-source-code" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select TEXT
+            from [PREFIX]_SOURCE
+            where
+                OWNER = {0} and
+                NAME = {1} and
+                TYPE = {2}
+            order by LINE asc
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-change-timestamp" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select to_date(TIMESTAMP, 'YYYY-MM-DD:HH24:MI:SS')
+            from [PREFIX]_OBJECTS
+            where
+                 OWNER = {0} and
+                 OBJECT_NAME = {1} and
+                 OBJECT_TYPE = {2}
+        </statement>
+        <statement prefixes="DBA, ALL">
+            select LAST_DDL_TIME
+            from [PREFIX]_OBJECTS
+            where
+                 OWNER = {0} and
+                 OBJECT_NAME = {1} and
+                 OBJECT_TYPE = {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="invalid-objects" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                 OBJECT_NAME,
+                 OBJECT_TYPE
+            from [PREFIX]_OBJECTS
+            where
+                 OWNER = {0} and
+                 STATUS = 'INVALID'
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="debug-objects" is-query="true" is-prepared-statement="true">
+        <statement>
+            select
+                 OBJECT_NAME,
+                 OBJECT_TYPE
+            from SYS.ALL_PROBE_OBJECTS
+            where
+                 OWNER = {0} and
+                 DEBUGINFO = 'T'
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="object-compile-errors" is-query="true" is-prepared-statement="true">
+        <statement prefixes="DBA, ALL">
+            select
+                LINE,
+                POSITION,
+                TEXT,
+                TYPE as OBJECT_TYPE
+            from [PREFIX]_ERRORS
+            where
+                OWNER = {0} and
+                NAME = {1}
+            order by
+                TYPE,
+                SEQUENCE asc
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="explain-plan-result" is-query="true" is-prepared-statement="true">
+        <statement>
+            select * from PLAN_TABLE order by PARENT_ID nulls first, ID
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="clear-explain-plan-data" is-prepared-statement="true">
+        <statement>
+            delete PLAN_TABLE
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="enable-log-output" is-prepared-statement="true">
+        <statement>
+            begin dbms_output.enable(1000000); end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="disable-log-output" is-prepared-statement="true">
+        <statement>
+            begin dbms_output.disable(); end;
+        </statement>
+    </statement-execution-processor>
+    <statement-execution-processor id="read-log-output" is-prepared-statement="true">
+        <statement>
+            declare 
+                v_line varchar2(32767);
+                v_done number;
+                v_report_clob CLOB;
+            begin
+              dbms_lob.createtemporary(v_report_clob, TRUE, dbms_lob.call);
+              loop
+                exit when v_done = 1;
+                dbms_output.get_line( v_line, v_done );
+                dbms_lob.append(v_report_clob, TO_CLOB(v_line || chr(10)));
+              end loop;
+             :buffer := v_report_clob;
+            end;
+        </statement>
+    </statement-execution-processor>
+
+
+    <statement-execution-processor id="compile-object">
+        <statement>
+             alter {2} {0}.{1} compile {3}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="compile-object-body">
+        <statement>
+            alter {2} {0}.{1} compile {3} body
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="load-distinct-values" is-query="true">
+        <statement>
+            select distinct {2} from {0}.{1} where {2} is not null order by {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="set-current-schema">
+        <statement>
+            alter session set current_schema = {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="validate-connection" timeout="5" is-prepared-statement="true">
+        <statement>
+            select 1 from dual
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="enable-trigger">
+        <statement>
+            alter trigger {0}.{1} enable
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disable-trigger">
+        <statement>
+            alter trigger {0}.{1} disable
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="enable-constraint">
+        <statement>
+            alter table {0}.{1}
+            enable constraint {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disable-constraint">
+        <statement>
+            alter table {0}.{1}
+            disable constraint {2}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="sessions" is-prepared-statement="true">
+        <statement>
+            SELECT *
+            FROM (WITH vs AS (SELECT
+                                  ROWNUM rnum,
+                                  sid,
+                                  serial#,
+                                  status,
+                                  username,
+                                  schemaname,
+                                  last_call_et,
+                                  command,
+                                  machine,
+                                  osuser,
+                                  module,
+                                  action,
+                                  resource_consumer_group,
+                                  client_info,
+                                  client_identifier,
+                                  type,
+                                  terminal,
+                                  sql_id
+                              FROM gv$session)
+                  SELECT
+                      vs.sid SESSION_ID,
+                      vs.serial# SERIAL_NUMBER,
+                      vs.username "USER",
+                      vs.schemaname "SCHEMA",
+                      vs.osuser OS_USER,
+                      vs.machine HOST,
+                      vs.module MODULE,
+                      vs.status STATUS,
+                      CASE WHEN vs.status = 'ACTIVE' THEN last_call_et ELSE NULL END "SECONDS_IN_WAIT",
+                      DECODE (vs.command,
+                             0, NULL,
+                             1, 'CRE TAB',
+                             2, 'INSERT',
+                             3, 'SELECT',
+                             4, 'CRE CLUSTER',
+                             5, 'ALT CLUSTER',
+                             6, 'UPDATE',
+                             7, 'DELETE',
+                             8, 'DRP CLUSTER',
+                             9, 'CRE INDEX',
+                             10, 'DROP INDEX',
+                             11, 'ALT INDEX',
+                             12, 'DROP TABLE',
+                             13, 'CRE SEQ',
+                             14, 'ALT SEQ',
+                             15, 'ALT TABLE',
+                             16, 'DROP SEQ',
+                             17, 'GRANT',
+                             18, 'REVOKE',
+                             19, 'CRE SYN',
+                             20, 'DROP SYN',
+                             21, 'CRE VIEW',
+                             22, 'DROP VIEW',
+                             23, 'VAL INDEX',
+                             24, 'CRE PROC',
+                             25, 'ALT PROC',
+                             26, 'LOCK TABLE',
+                             28, 'RENAME',
+                             29, 'COMMENT',
+                             30, 'AUDIT',
+                             31, 'NOAUDIT',
+                             32, 'CRE DBLINK',
+                             33, 'DROP DBLINK',
+                             34, 'CRE DB',
+                             35, 'ALTER DB',
+                             36, 'CRE RBS',
+                             37, 'ALT RBS',
+                             38, 'DROP RBS',
+                             39, 'CRE TBLSPC',
+                             40, 'ALT TBLSPC',
+                             41, 'DROP TBLSPC',
+                             42, 'ALT SESSION',
+                             43, 'ALT USER',
+                             44, 'COMMIT',
+                             45, 'ROLLBACK',
+                             46, 'SAVEPOINT',
+                             47, 'PL/SQL EXEC',
+                             48, 'SET XACTN',
+                             49, 'SWITCH LOG',
+                             50, 'EXPLAIN',
+                             51, 'CRE USER',
+                             52, 'CRE ROLE',
+                             53, 'DROP USER',
+                             54, 'DROP ROLE',
+                             55, 'SET ROLE',
+                             56, 'CRE SCHEMA',
+                             57, 'CRE CTLFILE',
+                             58, 'ALTER TRACING',
+                             59, 'CRE TRIGGER',
+                             60, 'ALT TRIGGER',
+                             61, 'DRP TRIGGER',
+                             62, 'ANALYZE TAB',
+                             63, 'ANALYZE IX',
+                             64, 'ANALYZE CLUS',
+                             65, 'CRE PROFILE',
+                             66, 'DRP PROFILE',
+                             67, 'ALT PROFILE',
+                             68, 'DRP PROC',
+                             69, 'DRP PROC',
+                             70, 'ALT RESOURCE',
+                             71, 'CRE SNPLOG',
+                             72, 'ALT SNPLOG',
+                             73, 'DROP SNPLOG',
+                             74, 'CREATE SNAP',
+                             75, 'ALT SNAP',
+                             76, 'DROP SNAP',
+                             79, 'ALTER ROLE',
+                             79, 'ALTER ROLE',
+                             85, 'TRUNC TAB',
+                             86, 'TRUNC CLUST',
+                             88, 'ALT VIEW',
+                             91, 'CRE FUNC',
+                             92, 'ALT FUNC',
+                             93, 'DROP FUNC',
+                             94, 'CRE PKG',
+                             95, 'ALT PKG',
+                             96, 'DROP PKG',
+                             97, 'CRE PKG BODY',
+                             98, 'ALT PKG BODY',
+                             99, 'DRP PKG BODY',
+                             TO_CHAR (vs.command)) COMMAND,
+                      vs.sql_id SQL_ID,
+                      vs.action ACTION,
+                      vs.resource_consumer_group,
+                      vs.client_info,
+                      vs.client_identifier
+                  FROM vs
+                  WHERE
+                      vs.username IS NOT NULL AND
+                      NVL (vs.osuser, 'x') != 'SYSTEM' AND
+                      vs.type != 'BACKGROUND'
+                  ORDER BY 1) sub1
+            ORDER BY 9 ASC
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="session-sql" is-prepared-statement="true" timeout="10">
+        <statement>
+            select replace (q.SQL_FULLTEXT, chr (0)) sql_statement
+            from
+                GV$SESSION s,
+                GV$SQL q
+            where
+                s.SQL_ADDRESS = q.ADDRESS and
+                s.SQL_HASH_VALUE = q.HASH_VALUE and
+                s.SID = {0}
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disconnect-session" is-prepared-statement="true" timeout="10">
+        <statement>
+            ALTER SYSTEM DISCONNECT SESSION '{0},{1}'
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disconnect-session-immediate" is-prepared-statement="true" timeout="10">
+        <statement>
+            ALTER SYSTEM DISCONNECT SESSION '{0},{1}' IMMEDIATE
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="disconnect-session-post-transaction" is-prepared-statement="true" timeout="30">
+        <statement>
+            ALTER SYSTEM DISCONNECT SESSION '{0},{1}' POST_TRANSACTION
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="kill-session" is-prepared-statement="true" timeout="10">
+        <statement>
+            ALTER SYSTEM KILL SESSION '{0},{1}'
+        </statement>
+    </statement-execution-processor>
+
+    <statement-execution-processor id="kill-session-immediate" is-prepared-statement="true" timeout="10">
+        <statement>
+            ALTER SYSTEM KILL SESSION '{0},{1}' IMMEDIATE
+        </statement>
+    </statement-execution-processor>
+
+
+
+</data-dictionary>

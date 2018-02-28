@@ -1,0 +1,36 @@
+
+/*
+ Name: Database Navigator
+ Version: 2.0
+ SQL demo text
+ */
+
+drop table "SAMPLE" cascade constraints ;
+
+create table sample (
+        "ID"          number(10,0)   not null , -- primary key
+        "NAME"        varchar2(40)   not null ,
+        DESCRIPTION   varchar2(256)  ,
+        CREATION_DATE date )
+        tablespace  USERS;
+
+alter table "SAMPLE" add constraint PK_SAMPLE primary key (id)
+        using index tablespace USERS;
+
+-- insert data
+insert into "SAMPLE" ( "ID", "NAME", DESCRIPTION, CREATION_DATE )
+        values (
+            24,
+            'Sample name',
+            'Sample description',
+            sysdate );
+
+create or replace view sample_view as (
+    select
+        "ID" as "SAMPLE ID" ,
+        "NAME" as "Name",
+        nvl(DESCRIPTION, '--- no description ---') as "Description",
+        nvl(CREATION_DATE, to_date('01-JAN-2006', 'DD-MON-YYYY')) as "Creation date"
+from "SAMPLE");
+
+select * from SAMPLE_VIEW where "NAME" = :v_name order by "ID";
